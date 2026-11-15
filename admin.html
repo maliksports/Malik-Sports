@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Malik Controller</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#131317;--panel:#1f1f23;--hi:#2a292e;--line:#47464a;--fg:#e4e1e7;--mute:#c8c5ca;--acc:#00fe66;--ink:#003911;--cy:#00daf3;--err:#ffb4ab;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 "Space Grotesk",system-ui,sans-serif;padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.wrap{max-width:60rem;margin:0 auto}
+h1,h2{font-family:Anton,Impact,sans-serif;font-weight:400;letter-spacing:.02em;margin:0}
+h1{font-size:28px}h2{font-size:22px;margin-bottom:12px}.h2{margin:24px 0 12px}
+a{color:var(--cy)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}
+.mute{color:var(--mute)}.sm{font-size:13px}.err{color:var(--err);min-height:22px;margin:8px 0;font-size:14px}
+.tabs{display:flex;gap:4px;background:#0e0e12;padding:4px;border-radius:12px;margin-bottom:16px}
+.tabs button{flex:1}
+button{font:inherit;cursor:pointer;border:0;color:var(--fg)}
+.tab{background:none;padding:10px;border-radius:8px;font-weight:600;color:var(--mute)}
+.tab.on{background:var(--hi);color:var(--acc)}
+#nb{background:var(--acc);color:var(--ink);border-radius:99px;padding:0 7px;font-size:12px;margin-left:6px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
+.chip{background:var(--panel);padding:8px 14px;border-radius:99px;white-space:nowrap;font-size:14px}
+.chip.on{background:var(--acc);color:var(--ink);font-weight:700}
+.card{background:var(--panel);border-radius:12px;padding:16px;margin-bottom:12px}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.g{align-items:center}
+.id{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:20px;letter-spacing:.03em}
+.badge{padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700;white-space:nowrap;background:var(--hi)}
+.badge.p{background:#00363d;color:var(--cy)}.badge.c,.badge.d,.badge.ok{background:#00391a;color:var(--acc)}.badge.x{background:#93000a;color:#ffdad6}
+.cust{margin:12px 0;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);word-break:break-word}
+.items{list-style:none;margin:0 0 12px;padding:0}.items li{display:flex;justify-content:space-between;gap:12px;padding:2px 0}
+.total{font-family:Anton,Impact,sans-serif;font-size:26px;color:var(--acc)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{padding:11px 18px;border-radius:10px;font-weight:700;background:var(--hi)}
+.btn.pri{background:var(--acc);color:var(--ink)}.btn.bad{background:none;color:var(--err);box-shadow:inset 0 0 0 1px var(--err)}
+.btn:active{transform:scale(.97)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+label{display:block;font-size:14px;font-weight:600;color:var(--mute)}
+input,select,textarea{display:block;width:100%;margin-top:4px;padding:11px 12px;font:inherit;color:var(--fg);background:#0e0e12;border:1px solid var(--line);border-radius:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+[hidden]{display:none!important}.thumb{width:64px;height:64px;object-fit:cover;border-radius:8px;background:#0e0e12}
+textarea{resize:vertical}
+.empty{text-align:center;padding:32px 16px}.empty p{margin:4px 0 0}
+.gate{max-width:24rem;margin:15vh auto 0}.gate p{margin:8px 0 16px}.gate .btn{width:100%}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:var(--acc);color:var(--ink);font-weight:700;padding:12px 20px;border-radius:12px;transition:.25s;pointer-events:none}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<script>
+/* ============ EMAIL SETUP: paste your 3 EmailJS values between the quotes ============ */
+window.MS_EMAIL = {
+  serviceId: "service_ijqay4g",   // e.g. service_abc123
+  templateId: "template_q9hvroj",  // e.g. template_xyz789
+  publicKey: "QxjW2BrW8BqnnAN6S",   // e.g. aBcDeFgHiJkLmNoP
+  shop: "Malik Sports"
+};
+/* ============ Do not edit below this line ============ */
+(function () {
+  var money = function (n) { return "Rs " + Math.round(Number(n)).toLocaleString("en-PK"); };
+  var PAY = { cod: "Cash on Delivery", easypaisa: "Easypaisa", jazzcash: "JazzCash" };
+  var TEXT = {
+    placed: ["received", "Thank you for your order. We have received it and will confirm it shortly."],
+    confirmed: ["confirmed", "Good news! Your order is confirmed and we are getting it ready."],
+    dispatched: ["on its way", "Your order has been dispatched."],
+    delivered: ["delivered", "Your order has been delivered. We hope you enjoy your gear!"],
+    cancelled: ["cancelled", "Your order has been cancelled. If you did not expect this, please contact us."]
+  };
+  window.msMail = function (o, kind) {
+    var C = window.MS_EMAIL || {}, T = TEXT[kind];
+    if (!C.serviceId || !C.templateId || !C.publicKey || !T || !o || !o.customer || !o.customer.email) return Promise.resolve("off");
+    var shop = C.shop || "Malik Sports", extra = "";
+    if (kind === "confirmed" && o.pay.method === "cod") extra = " Please keep " + money(o.totals.total) + " ready for the rider.";
+    if (kind === "dispatched") extra = o.delivery === "express" ? " It should reach you in 2–4 working days." : " It should reach you in 4–6 working days.";
+    var msg = "Hi " + o.customer.name + ",\n\n" + T[1] + extra + "\n\nOrder #" + o.id + "\n" +
+      o.lines.map(function (l) { return "• " + l.name + " × " + l.qty + " — " + money(l.price * l.qty); }).join("\n") +
+      (o.voucher ? "\nVoucher (" + o.voucher.code + "): -" + money(o.voucher.discount) : "") + "\n\nTotal: " + money(o.totals.total) + "\nDeliver to: " + o.customer.address + ", " + o.customer.city + "\nPayment: " + (PAY[o.pay.method] || o.pay.method) +
+      "\n\nThank you for shopping with " + shop + ".";
+    return fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ service_id: C.serviceId, template_id: C.templateId, user_id: C.publicKey,
+        template_params: { to_email: o.customer.email, to_name: o.customer.name, subject: "Order #" + o.id + " " + T[0] + " – " + shop, message: msg, order_id: o.id } })
+    }).then(function (r) { return r.ok ? "ok" : "fail"; }, function () { return "fail"; });
+  };
+})();
+</script>
+<script>
+/* ============ SHARED DATABASE: paste your 2 Firebase values between the quotes ============ */
+window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. https://malik-sports-default-rtdb.firebaseio.com
+window.MS_KEY = "AIzaSyCKHqm-_cjIxPJp403wB-1A8g5nF43P_GY";   // e.g. AIzaSy...
+/* ============ Do not edit below this line ============ */
+(function () {
+  var DB = String(window.MS_DB || "").replace(/\/+$/, ""), KEY = String(window.MS_KEY || "");
+  var ready = DB.indexOf("https://") === 0 && KEY && KEY.indexOf("PASTE") < 0;
+  var raw = Storage.prototype.setItem, snap = {}, S = null;
+  try { S = JSON.parse(sessionStorage.getItem("ms-fb")); } catch (e) {}
+  var DEFAULTS = [
+{id:"beast",name:"Beast Pro Bat",cartName:"Malik Beast Pro Willow Bat",cat:"bats",type:"bat",price:83700,rating:4.9,reviews:128,tag:"New Drop",tone:"green",sub:"English Willow",cartTag:"PRO SPEC",meta:[["Size","Men's SH"],["Weight","2lb 8oz"]],keys:"cricket bat willow"},
+{id:"pro1000",name:"Malik Pro 1000 Kashmir Willow",cartName:"Malik Pro 1000 Kashmir Willow",cat:"bats",type:"bat",price:70000,rating:4.9,reviews:128,tag:"Pro Spec",tone:"green",sub:"Kashmir Willow",cartTag:"PRO SPEC",meta:[["Willow","Kashmir"],["Grade","Pro Spec"]],keys:"cricket bat willow"},
+{id:"apex",name:"Apex Match Leather Cricket Ball",cartName:"Apex Match Leather Ball",cat:"balls",type:"ball",price:5600,rating:4.8,reviews:94,tag:"Match Day",tone:"cyan",sub:"Match Ball",cartTag:"MATCH BALL",meta:[["Type","4-Piece County"],["Color","Cherry Red"]],keys:"cricket leather red"},
+{id:"testball",name:"Test Match Ball",cartName:"Test Match Ball",cat:"balls",type:"ball",price:9800,rating:4.7,reviews:62,tag:"Handcrafted",tone:"red",sub:"Red Ball",cartTag:"RED BALL",meta:[["Type","Red Ball"],["Finish","Hand-stitched"]],keys:"cricket leather red"},
+{id:"strikeforce",name:"Strike Force",cartName:"Strike Force Match Football",cat:"footballs",type:"football",price:41700,rating:4.8,reviews:94,tag:"FIFA Pro",tone:"cyan",sub:"Match Ball",cartTag:"FIFA PRO",meta:[["Type","Match Ball"],["Grade","FIFA Pro"]],keys:"football soccer"},
+{id:"strikepro",name:"Strike Pro Football FIFA Quality",cartName:"Strike Pro Football",cat:"footballs",type:"football",price:12600,rating:4.7,reviews:210,tag:"FIFA Quality",tone:"cyan",sub:"Football",cartTag:"FIFA",meta:[["Type","Football"],["Grade","FIFA Quality"]],keys:"football soccer"},
+{id:"velocity",name:"Velocity Spikes",cartName:"Velocity Spikes Shoes",cat:"footwear",type:"shoe",price:50400,rating:5.0,reviews:215,tag:"Best Seller",tone:"solid",sub:"Footwear",cartTag:"SPIKES",meta:[["Size","UK 9"],["Color","Stealth Neon"]],keys:"cricket shoes spikes"},
+{id:"gloves",name:"Pro Batting Gloves - Ultra Grip",cartName:"Pro Batting Gloves",cat:"gloves",type:"gloves",price:9800,rating:4.9,reviews:315,tag:"Ultra Grip",tone:"green",sub:"Batting Gloves",cartTag:"GRIP",meta:[["Type","Batting"],["Grip","Ultra Grip"]],keys:"batting gloves"},
+{id:"helmet",name:"Titanium Helmet",cartName:"Titanium Grill Helmet",cat:"helmets",type:"helmet",price:37800,rating:4.9,reviews:78,tag:"Pro Grade",tone:"green",sub:"Safety Gear",cartTag:"SAFETY",meta:[["Grill","Titanium"],["Grade","Pro"]],keys:"cricket helmet grill safety"},
+{id:"duffel",name:"Alpha Duffel",cartName:"Alpha Duffel Kit Bag",cat:"accessories",type:"duffel",price:26600,rating:4.9,reviews:140,tag:"Waterproof",tone:"cyan",sub:"Gear Bag",cartTag:"GEAR BAG",meta:[["Type","Gear Bag"],["Build","Waterproof"]],keys:"duffel bag kit"}
+];
+  function keep(id, rf, secs) { S = { id: id, refresh: rf, exp: Date.now() + (+secs) * 1000 }; raw.call(sessionStorage, "ms-fb", JSON.stringify(S)); }
+  function tok() {
+    if (!S) return Promise.reject(new Error("login"));
+    if (Date.now() < S.exp - 60000) return Promise.resolve(S.id);
+    return fetch("https://securetoken.googleapis.com/v1/token?key=" + encodeURIComponent(KEY), { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: "grant_type=refresh_token&refresh_token=" + encodeURIComponent(S.refresh) })
+      .then(function (r) { return r.json(); }).then(function (j) { if (!j.id_token) throw new Error("login"); keep(j.id_token, j.refresh_token, j.expires_in); return S.id; });
+  }
+  function db(m, p, b) {
+    return tok().then(function (t) { return fetch(DB + "/" + p + ".json?auth=" + encodeURIComponent(t), { method: m, body: b === undefined ? undefined : JSON.stringify(b) }); })
+      .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); });
+  }
+  function fail() {
+    var t = document.getElementById("toast"); if (!t) return;
+    t.textContent = "Could not save online. Check internet, then lock and sign in again."; t.classList.add("on");
+    setTimeout(function () { t.classList.remove("on"); }, 3500);
+  }
+  window.msLogin = function (email, pw) {
+    if (!ready) return Promise.reject(new Error("setup"));
+    return fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + encodeURIComponent(KEY), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email, password: pw, returnSecureToken: true }) })
+      .then(function (r) { return r.json(); }).then(function (j) { if (!j.idToken) throw new Error("login"); keep(j.idToken, j.refreshToken, j.expiresIn); });
+  };
+  /* Download products, vouchers and orders from the database. Resolves true if the orders changed. */
+  window.msPull = function () {
+    if (!ready) return Promise.reject(new Error("setup"));
+    return Promise.all([db("GET", "products"), db("GET", "vouchers"), db("GET", "orders")]).then(function (r) {
+      var pr = r[0];
+      if (typeof pr !== "string") { pr = JSON.stringify(DEFAULTS); db("PUT", "products", pr).catch(fail); }
+      raw.call(localStorage, "ms-products-pk", pr);
+      raw.call(localStorage, "ms-vouchers-pk", typeof r[1] === "string" ? r[1] : "[]");
+      var o = r[2] || {}, arr = []; snap = {};
+      Object.keys(o).forEach(function (id) { try { arr.push(JSON.parse(o[id])); snap[id] = o[id]; } catch (e) {} });
+      arr.sort(function (a, b) { return String(b.placedAt).localeCompare(String(a.placedAt)); });
+      var s = JSON.stringify(arr), old = localStorage.getItem("ms-orders-pk");
+      raw.call(localStorage, "ms-orders-pk", s);
+      return old !== s;
+    });
+  };
+  /* Whenever this page saves something, also send it to the database. */
+  Storage.prototype.setItem = function (k, v) {
+    raw.call(this, k, v);
+    if (this !== localStorage || !ready) return;
+    if (k === "ms-products-pk") db("PUT", "products", v).catch(fail);
+    else if (k === "ms-vouchers-pk") db("PUT", "vouchers", v).catch(fail);
+    else if (k === "ms-orders-pk") {
+      try { JSON.parse(v).forEach(function (o) { var s = JSON.stringify(o); if (snap[o.id] !== s) { snap[o.id] = s; db("PUT", "orders/" + o.id, s).catch(fail); } }); } catch (e) {}
+    }
+  };
+})();
+</script>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+const rd=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
+const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>"&#"+c.charCodeAt(0)+";");
+const money=n=>"Rs "+Math.round(Number(n)).toLocaleString("en-PK");
+let photo="",editId=null;
+const descEditor=p=>`<div class="card" style="margin-top:-4px"><label>Description for “${esc(p.name)}”<textarea id="de" rows="6" maxlength="1500" placeholder="Material, size, features, what is in the box…">${esc(p.desc||"")}</textarea></label><div class="acts"><button class="btn pri" data-a="dsave" data-id="${esc(p.id)}">Save description</button><button class="btn" data-a="dcancel">Cancel</button></div></div>`;
+const prevHTML=()=>photo?`<img class="thumb" src="${photo}" alt="Photo preview"><button class="btn bad" data-a="rmph">Remove photo</button>`:"";
+const shrink=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const s=Math.min(1,640/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=Math.round(i.width*s);c.height=Math.round(i.height*s);c.getContext("2d").drawImage(i,0,0,c.width,c.height);ok(c.toDataURL("image/jpeg",.8))};i.onerror=no;i.src=r.result};r.onerror=no;r.readAsDataURL(f)});
+const ST={pending:["Pending","p"],confirmed:["Confirmed","c"],dispatched:["Dispatched","d"],delivered:["Delivered","ok"],cancelled:["Cancelled","x"]};
+const NEXT={pending:["confirmed","Confirm order"],confirmed:["dispatched","Mark dispatched"],dispatched:["delivered","Mark delivered"]};
+const PAYN={cod:"Cash on Delivery",easypaisa:"Easypaisa",jazzcash:"JazzCash"};
+const CATN={bats:"Bats",balls:"Balls",footballs:"Footballs",footwear:"Footwear",gloves:"Gloves",helmets:"Helmets",accessories:"Accessories"};
+const TYPE={bats:"bat",balls:"ball",footballs:"football",footwear:"shoe",gloves:"gloves",helmets:"helmet",accessories:"duffel"};
+let tab="orders",flt="all",tt;
+const ok=()=>sessionStorage.getItem("ms-admin-ok")==="1";
+const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2400)};
+
+function lock(){
+  $("#app").innerHTML=`<div class="card gate"><h1>Owner desk</h1><p class="mute">Sign in with your owner email and password to manage orders and products.</p><label>Email<input id="em" type="email" autocomplete="username"></label><label style="margin-top:12px">Password<input id="pw" type="password" autocomplete="current-password"></label><p id="err" class="err" role="alert"></p><button class="btn pri" data-a="login">Unlock</button></div>`;
+}
+function boot(){
+  $("#app").innerHTML=`<div class="card gate"><p class="mute">Loading your shop data…</p></div>`;
+  msPull().then(main,()=>{sessionStorage.removeItem("ms-admin-ok");lock();$("#err").textContent="Could not load. Check the setup values, your internet, then sign in again."});
+}
+function badge(){
+  const n=rd("ms-orders-pk",[]).filter(x=>x.status==="pending").length;
+  document.title=(n?`(${n}) `:"")+"Malik Sports – Owner";
+  const b=$("#nb");if(b){b.textContent=n;b.hidden=!n}
+}
+function main(){
+  $("#app").innerHTML=`<div class="top"><h1>Malik Sports · Owner</h1><div class="row g"><a href="https://maliksports.github.io/Malik-Sports/">View shop</a><button class="btn" data-a="lock">Lock</button></div></div>
+  <div class="tabs"><button class="tab${tab==="orders"?" on":""}" data-a="tab" data-v="orders">Orders<span id="nb"></span></button><button class="tab${tab==="products"?" on":""}" data-a="tab" data-v="products">Products</button><button class="tab${tab==="vouchers"?" on":""}" data-a="tab" data-v="vouchers">Vouchers</button></div>`+(tab==="orders"?ordersView():tab==="vouchers"?vouchersView():productsView());
+  badge();
+}
+function ordersView(){
+  const o=rd("ms-orders-pk",[]),cnt=s=>s==="all"?o.length:o.filter(x=>x.status===s).length;
+  const chips=["all",...Object.keys(ST)].map(s=>`<button class="chip${flt===s?" on":""}" data-a="flt" data-v="${s}">${s==="all"?"All":ST[s][0]} ${cnt(s)}</button>`).join("");
+  const list=o.filter(x=>flt==="all"||x.status===flt);
+  return `<div class="chips">${chips}</div>`+(list.length?list.map(orderCard).join(""):`<div class="card empty"><b>No orders here yet</b><p class="mute">When a customer places an order in the shop, it shows up here.</p></div>`);
+}
+function orderCard(x){
+  const c=x.customer,[lbl,cls]=ST[x.status]||ST.pending,n=NEXT[x.status],id=esc(x.id);
+  const ph=String(c.phone).replace(/\D/g,"").replace(/^92/,"0");
+  const when=new Date(x.placedAt).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
+  return `<article class="card"><div class="row"><div><span class="id">#${id}</span><div class="mute sm">${when}</div></div><span class="badge ${cls}">${lbl}</span></div>
+  <div class="cust"><b>${esc(c.name)}</b><div><a href="tel:${esc(ph)}">${esc(ph)}</a> · <a href="https://wa.me/92${esc(ph.slice(1))}" target="_blank" rel="noopener">WhatsApp</a> · <a href="mailto:${esc(c.email)}">${esc(c.email)}</a></div><div class="mute">${esc(c.address)}, ${esc(c.city)}</div></div>
+  <ul class="items">${x.lines.map(l=>`<li><span>${esc(l.name)} × ${l.qty}</span><span>${money(l.price*l.qty)}</span></li>`).join("")}</ul>${x.voucher?`<div class="sm mute" style="margin:-4px 0 10px">Voucher ${esc(x.voucher.code)}: -${money(x.voucher.discount)}</div>`:""}
+  <div class="row g"><div class="mute sm">${esc(PAYN[x.pay.method]||x.pay.method)}${x.pay.txn?` · ID <b>${esc(x.pay.txn)}</b>`:""}<br>${x.delivery==="express"?"Express":"Standard"} delivery</div><div class="total">${money(x.totals.total)}</div></div>
+  <div class="acts">${n?`<button class="btn pri" data-a="st" data-id="${id}" data-v="${n[0]}">${n[1]}</button>`:""}${x.status==="pending"||x.status==="confirmed"?`<button class="btn bad" data-a="st" data-id="${id}" data-v="cancelled">Cancel order</button>`:""}</div></article>`;
+}
+function productsView(){
+  const P=rd("ms-products-pk",null);
+  if(!Array.isArray(P))return `<div class="card empty"><b>Shop products not loaded yet</b><p class="mute"><a href="https://maliksports.github.io/Malik-Sports/">Open the shop</a> once in this browser, then come back here.</p></div>`;
+  return `<div class="card"><h2>Add a product</h2><div class="grid"><label>Name<input id="pn" maxlength="60" placeholder="e.g. Hard Tennis Ball"></label><label>Category<select id="pc">${Object.entries(CATN).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select></label><label>Price (Rs)<input id="pp" type="number" min="1" step="1" inputmode="numeric"></label><label>Label (optional)<input id="pt" maxlength="14" placeholder="New, Sale"></label></div><label style="margin-top:12px">Description (optional)<textarea id="pd" rows="4" maxlength="1500" placeholder="Tell customers about this product: material, size, features, what is in the box…"></textarea></label>
+  <label style="display:flex;align-items:center;gap:10px;margin-top:14px;color:var(--fg)"><input id="pv" type="checkbox" checked style="display:inline-block;width:22px;height:22px;margin:0;padding:0;accent-color:#00fe66">Vouchers can be used on this product</label><div style="margin-top:12px"><span class="mute sm">Photo (optional)</span><div class="acts" style="margin-top:6px"><button class="btn" data-a="cam">Take photo</button><button class="btn" data-a="gal">Choose from gallery</button></div><div id="prev" class="acts g">${prevHTML()}</div><input id="ph1" type="file" accept="image/*" capture="environment" hidden><input id="ph2" type="file" accept="image/*" hidden></div><p id="perr" class="err" role="alert"></p><button class="btn pri" data-a="add">Add to shop</button></div>
+  <h2 class="h2">In the shop (${P.length})</h2><p class="mute sm">Customers see changes when they open or reload the shop.</p>`+(P.length?P.map(p=>`<div class="card row g" style="flex-wrap:wrap"><div class="row g">${p.img?`<img class="thumb" src="${p.img}" alt="">`:""}<div><b>${esc(p.name)}</b><div class="mute sm">${esc(CATN[p.cat]||p.cat)} · ${money(p.price)}</div></div></div><div class="acts" style="margin:0"><button class="btn${p.noVoucher?"":" pri"}" data-a="vtog" data-id="${esc(p.id)}">Voucher: ${p.noVoucher?"OFF":"ON"}</button><button class="btn" data-a="desc" data-id="${esc(p.id)}">Description${p.desc?" ✓":""}</button><button class="btn" data-a="price" data-id="${esc(p.id)}">Set price</button><button class="btn bad" data-a="del" data-id="${esc(p.id)}">Delete</button></div></div>${editId===p.id?descEditor(p):""}`).join(""):`<div class="card empty">No products in the shop. Add one above.</div>`);
+}
+
+const left=ms=>{const m=Math.floor(ms/6e4),d=Math.floor(m/1440),h=Math.floor(m%1440/60);return d?`${d}d ${h}h left`:`${h}h ${m%60}m left`};
+const scope=v=>{if(!v.products||!v.products.length)return"All products";const P=rd("ms-products-pk",[]),n=v.products.map(id=>(P.find(p=>p.id===id)||{}).name).filter(Boolean);return n.length?"Only on: "+n.map(esc).join(", "):"Only on products that were deleted"};
+const fmt=t=>new Date(t).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
+function vouchersView(){
+  const PL=rd("ms-products-pk",[]),V=rd("ms-vouchers-pk",[]).slice().sort((x,y)=>y.createdAt-x.createdAt),now=Date.now();
+  return `<div class="card"><h2>Create a voucher</h2><p class="mute sm" style="margin:-4px 0 12px">Vouchers work on every product, except products set to “Voucher: OFF” in the Products tab.</p><div class="grid">
+  <label>Voucher code<div class="row g" style="gap:8px"><input id="vc" maxlength="20" autocapitalize="characters" autocomplete="off" placeholder="e.g. EID10"><button class="btn" data-a="suggest" style="white-space:nowrap">Suggest</button></div></label>
+  <label>Discount<input id="vv" type="number" min="1" step="1" inputmode="numeric"></label>
+  <label>Discount type<select id="vt"><option value="pct">Percent (%)</option><option value="amt">Fixed amount (Rs)</option></select></label>
+  <label>Valid for<select id="vd">${[1,2,3,4,5,6,7].map(d=>`<option value="${d}">${d===1?"1 day (24 hours)":d+" days"}</option>`).join("")}</select></label>
+  <label>Works on<select id="vs"><option value="all">All products</option><option value="sel">Only selected products</option></select></label></div>
+  <div id="vpl" hidden style="max-height:220px;overflow:auto;margin-top:10px;background:#0e0e12;border:1px solid var(--line);border-radius:8px;padding:6px 12px">${PL.length?PL.map(p=>`<label style="display:flex;align-items:center;gap:10px;padding:8px 0;color:var(--fg)"><input type="checkbox" class="vp" value="${esc(p.id)}" style="display:inline-block;width:22px;height:22px;margin:0;padding:0;accent-color:#00fe66">${esc(p.name)}</label>`).join(""):`<p class="mute sm">No products found. Open the shop once, then come back.</p>`}</div>
+  <p id="verr" class="err" role="alert"></p><button class="btn pri" data-a="vadd">Create voucher</button></div>
+  <h2 class="h2">Your vouchers (${V.length})</h2>`+(V.length?V.map(v=>{const live=now<v.expiresAt;return `<div class="card row g" style="flex-wrap:wrap"><div><span class="id">${esc(v.code)}</span><div class="mute sm">${v.type==="pct"?v.value+"% off":money(v.value)+" off"} · ends ${fmt(v.expiresAt)}</div><div class="mute sm">${scope(v)}</div></div><div class="row g"><span class="badge ${live?"ok":"x"}">${live?left(v.expiresAt-now):"Expired"}</span><button class="btn bad" data-a="vdel" data-id="${esc(v.code)}">Delete</button></div></div>`}).join(""):`<div class="card empty"><b>No vouchers yet</b><p class="mute">Create one above. Customers type it in their cart.</p></div>`);
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-a]");if(!t)return;
+  const a=t.dataset.a,v=t.dataset.v,id=t.dataset.id;
+  if(a==="login"){
+    const em=$("#em").value.trim(),pw=$("#pw").value;
+    if(!em||!pw){$("#err").textContent="Enter your email and password.";return}
+    t.disabled=true;t.textContent="Signing in…";
+    msLogin(em,pw).then(()=>{sessionStorage.setItem("ms-admin-ok","1");boot()},x=>{$("#err").textContent=x&&x.message==="setup"?"Setup values are missing at the top of admin.html.":"Wrong email or password. Try again.";t.disabled=false;t.textContent="Unlock"});
+  }else if(a==="lock"){sessionStorage.removeItem("ms-admin-ok");sessionStorage.removeItem("ms-fb");lock()}
+  else if(a==="tab"){tab=v;main()}
+  else if(a==="flt"){flt=v;main()}
+  else if(a==="st"){
+    const all=rd("ms-orders-pk",[]),x=all.find(o=>o.id===id);if(!x)return;
+    if(v==="cancelled"&&!confirm("Cancel order #"+id+"?"))return;
+    x.status=v;wr("ms-orders-pk",all);main();const msg="Order #"+id+" "+ST[v][0].toLowerCase();toast(msg);(window.msMail?msMail(x,v):Promise.resolve("off")).then(r=>toast(msg+(r==="ok"?" · email sent":r==="off"?" · email not set up yet":" · email could not be sent")));
+  }else if(a==="cam")$("#ph1").click();
+  else if(a==="gal")$("#ph2").click();
+  else if(a==="rmph"){photo="";$("#prev").innerHTML=""}
+  else if(a==="desc"){editId=editId===id?null:id;main()}
+  else if(a==="dsave"){const P=rd("ms-products-pk",[]),p=P.find(x=>x.id===id);if(!p)return;const t=$("#de").value.trim();if(t)p.desc=t;else delete p.desc;wr("ms-products-pk",P);editId=null;main();toast("Description saved")}
+  else if(a==="dcancel"){editId=null;main()}
+  else if(a==="vtog"){const P=rd("ms-products-pk",[]),p=P.find(x=>x.id===id);if(!p)return;if(p.noVoucher)delete p.noVoucher;else p.noVoucher=true;wr("ms-products-pk",P);main();toast(p.name+": voucher "+(p.noVoucher?"OFF":"ON"))}
+  else if(a==="price"){
+    const P=rd("ms-products-pk",[]),p=P.find(x=>x.id===id);if(!p)return;
+    const n=Math.round(parseFloat(prompt("New price for "+p.name+" (Rs)",p.price)));
+    if(n>0){p.price=n;wr("ms-products-pk",P);main();toast("Price updated")}
+  }else if(a==="add"){
+    const name=$("#pn").value.trim(),price=parseFloat($("#pp").value),cat=$("#pc").value,tag=$("#pt").value.trim();
+    if(!name||!(price>0)){$("#perr").textContent="Enter a name and a price above 0.";return}
+    const P=rd("ms-products-pk",[]);
+    P.unshift({id:"p"+Date.now().toString(36),name,cartName:name,cat,type:TYPE[cat],price:Math.round(price),img:photo||undefined,noVoucher:$("#pv").checked?undefined:true,desc:$("#pd").value.trim()||undefined,rating:0,reviews:0,tag:tag||"New",tone:"green",sub:CATN[cat],cartTag:(tag||"New").toUpperCase(),meta:[["Category",CATN[cat]]],keys:name.toLowerCase()});
+    if(!wr("ms-products-pk",P)){toast("Not enough storage. Try a smaller photo or delete a product.");return}photo="";main();toast("Added to the shop");
+  }else if(a==="suggest"){
+    const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";for(const b of crypto.getRandomValues(new Uint8Array(4)))s+=A[b%A.length];$("#vc").value="MALIK-"+s;
+  }else if(a==="vadd"){
+    const code=$("#vc").value.trim().toUpperCase(),val=Math.round(parseFloat($("#vv").value)),type=$("#vt").value,days=+$("#vd").value,now=Date.now(),V=rd("ms-vouchers-pk",[]);
+    const sel=$("#vs").value==="sel",ids=sel?[...document.querySelectorAll(".vp:checked")].map(x=>x.value):[];
+    const er=!/^[A-Z0-9-]{3,20}$/.test(code)?"Code: 3 to 20 letters, numbers or dashes.":!(val>0)?"Enter a discount above 0.":type==="pct"&&val>100?"Percent cannot be above 100.":V.some(v=>v.code===code&&now<v.expiresAt)?"This code is already active.":sel&&!ids.length?"Choose at least one product, or pick All products.":"";
+    $("#verr").textContent=er;if(er)return;
+    const nv=V.filter(v=>v.code!==code);nv.unshift({code,type,value:val,days,createdAt:now,expiresAt:now+days*864e5,products:ids.length?ids:undefined});
+    if(!wr("ms-vouchers-pk",nv)){$("#verr").textContent="Could not save. Storage is full.";return}
+    main();toast("Voucher "+code+" created for "+days+(days===1?" day":" days"));
+  }else if(a==="vdel"){
+    if(confirm("Delete voucher "+id+"?")){wr("ms-vouchers-pk",rd("ms-vouchers-pk",[]).filter(v=>v.code!==id));main();toast("Voucher deleted")}
+  }else if(a==="del"){
+    const P=rd("ms-products-pk",[]),p=P.find(x=>x.id===id);
+    if(p&&confirm("Delete “"+p.name+"” from the shop?")){wr("ms-products-pk",P.filter(x=>x.id!==id));main();toast("Deleted from the shop")}
+  }
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="pw")$("[data-a=login]").click()});
+document.addEventListener("change",async e=>{if(e.target.id==="vs"){$("#vpl").hidden=e.target.value!=="sel";return}if(e.target.id!=="ph1"&&e.target.id!=="ph2")return;const f=e.target.files[0];if(!f)return;try{photo=await shrink(f);$("#prev").innerHTML=prevHTML()}catch(x){toast("Could not read that photo")}e.target.value=""});
+addEventListener("storage",e=>{
+  if(!ok()||e.key!=="ms-orders-pk")return;
+  toast("Orders updated");if(tab==="orders")main();else badge();
+});
+setInterval(()=>{if(!ok())return;msPull().then(c=>{if(!c)return;if(tab==="orders"){main();toast("Orders updated")}else badge()},()=>{})},30000);
+ok()?boot():lock();
+</script>
+</body>
+</html>

@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Malik Sports</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { "surface":"#ffffff","secondary-container":"#000000","on-tertiary-container":"#004f5a","surface-dim":"#ffffff","primary-fixed-dim":"#333333","secondary":"#111111","primary":"#111111","on-secondary":"#ffffff","outline":"#6b6b6b","on-error-container":"#93000a","secondary-fixed":"#333333","background":"#ffffff","surface-variant":"#e0e0e0","on-primary":"#ffffff","on-background":"#111111","secondary-fixed-dim":"#1a1a1a","surface-container-highest":"#e0e0e0","primary-container":"#ececec","surface-container-low":"#f7f7f7","surface-bright":"#e2e2e2","tertiary-container":"#d8f5f9","surface-container":"#f1f1f1","error-container":"#ffdad6","outline-variant":"#bdbdbd","surface-container-lowest":"#ffffff","error":"#ba1a1a","on-surface":"#111111","surface-container-high":"#e8e8e8","tertiary":"#00707e","on-surface-variant":"#4a4a4a" },
+  borderRadius: { "DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px" },
+  spacing: { "space-sm":"0.5rem","space-lg":"1.5rem","space-md":"1rem","gutter":"1.5rem","margin":"2rem","space-xs":"0.25rem","space-xl":"3rem" },
+  fontFamily: {
+    "headline-xl":["Anton","Impact","sans-serif"],"headline-lg":["Anton","Impact","sans-serif"],"headline-md":["Anton","Impact","sans-serif"],
+    "body-md":["Space Grotesk","system-ui","sans-serif"],"body-sm":["Space Grotesk","system-ui","sans-serif"],"body-lg":["Space Grotesk","system-ui","sans-serif"],
+    "headline-sm":["Space Grotesk","system-ui","sans-serif"],"label-md":["Space Grotesk","system-ui","sans-serif"],"label-lg":["Space Grotesk","system-ui","sans-serif"] },
+  fontSize: {
+    "headline-xl":["64px",{lineHeight:"72px",letterSpacing:"0.02em",fontWeight:"400"}],
+    "headline-lg":["48px",{lineHeight:"56px",letterSpacing:"0.02em",fontWeight:"400"}],
+    "headline-md":["32px",{lineHeight:"40px",letterSpacing:"0.01em",fontWeight:"400"}],
+    "headline-sm":["24px",{lineHeight:"32px",letterSpacing:"0em",fontWeight:"700"}],
+    "body-lg":["18px",{lineHeight:"28px",fontWeight:"400"}],
+    "body-md":["16px",{lineHeight:"24px",fontWeight:"400"}],
+    "body-sm":["14px",{lineHeight:"20px",fontWeight:"400"}],
+    "label-lg":["14px",{lineHeight:"20px",letterSpacing:"0.05em",fontWeight:"600"}],
+    "label-md":["12px",{lineHeight:"16px",letterSpacing:"0.05em",fontWeight:"600"}] }
+} } };
+</script>
+<style>
+/* Layout: one fixed header, one routed content column up to 72rem, bottom tab bar on phones.
+   Look: white and black sports shop. Anton for display, Space Grotesk for everything else. */
+:root {
+  --bg: #ffffff;
+  --fg: #111111;
+  --panel: #f1f1f1;
+  --accent: #000000;
+  --accent-ink: #ffffff;
+  --cyan: #00707e;
+  --font-display: "Anton", Impact, sans-serif;
+  --font-body: "Space Grotesk", system-ui, sans-serif;
+  color-scheme: light;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  padding-block: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  overscroll-behavior: none;
+}
+.wrap { width: 100%; max-width: 72rem; margin-inline: auto; }
+.material-symbols-outlined { font-family: "Material Symbols Outlined"; font-weight: normal; font-style: normal; font-size: 24px; line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; word-wrap: normal; direction: ltr; font-feature-settings: "liga"; -webkit-font-smoothing: antialiased; user-select: none; }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+button, a { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@keyframes slide-up { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+.view-enter { animation: slide-up .25s ease-out; }
+#toast { bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)); }
+@media (min-width: 768px) { #toast { bottom: calc(2rem + env(safe-area-inset-bottom, 0px)); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+</style>
+
+<style>[hidden]{display:none!important}</style>
+<script>
+/* ============ EMAIL SETUP: paste your 3 EmailJS values between the quotes ============ */
+window.MS_EMAIL = {
+  serviceId: "service_ijqay4g",   // e.g. service_abc123
+  templateId: "template_q9hvroj",  // e.g. template_xyz789
+  publicKey: "QxjW2BrW8BqnnAN6S",   // e.g. aBcDeFgHiJkLmNoP
+  shop: "Malik Sports"
+};
+/* ============ Do not edit below this line ============ */
+(function () {
+  var money = function (n) { return "Rs " + Math.round(Number(n)).toLocaleString("en-PK"); };
+  var PAY = { cod: "Cash on Delivery", easypaisa: "Easypaisa", jazzcash: "JazzCash" };
+  var TEXT = {
+    placed: ["received", "Thank you for your order. We have received it and will confirm it shortly."],
+    confirmed: ["confirmed", "Good news! Your order is confirmed and we are getting it ready."],
+    dispatched: ["on its way", "Your order has been dispatched."],
+    delivered: ["delivered", "Your order has been delivered. We hope you enjoy your gear!"],
+    cancelled: ["cancelled", "Your order has been cancelled. If you did not expect this, please contact us."]
+  };
+  window.msMail = function (o, kind) {
+    var C = window.MS_EMAIL || {}, T = TEXT[kind];
+    if (!C.serviceId || !C.templateId || !C.publicKey || !T || !o || !o.customer || !o.customer.email) return Promise.resolve("off");
+    var shop = C.shop || "Malik Sports", extra = "";
+    if (kind === "confirmed" && o.pay.method === "cod") extra = " Please keep " + money(o.totals.total) + " ready for the rider.";
+    if (kind === "dispatched") extra = o.delivery === "express" ? " It should reach you in 2–4 working days." : " It should reach you in 4–6 working days.";
+    var msg = "Hi " + o.customer.name + ",\n\n" + T[1] + extra + "\n\nOrder #" + o.id + "\n" +
+      o.lines.map(function (l) { return "• " + l.name + " × " + l.qty + " — " + money(l.price * l.qty); }).join("\n") +
+      (o.voucher ? "\nVoucher (" + o.voucher.code + "): -" + money(o.voucher.discount) : "") + "\n\nTotal: " + money(o.totals.total) + "\nDeliver to: " + o.customer.address + ", " + o.customer.city + "\nPayment: " + (PAY[o.pay.method] || o.pay.method) +
+      "\n\nThank you for shopping with " + shop + ".";
+    return fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ service_id: C.serviceId, template_id: C.templateId, user_id: C.publicKey,
+        template_params: { to_email: o.customer.email, to_name: o.customer.name, subject: "Order #" + o.id + " " + T[0] + " – " + shop, message: msg, order_id: o.id } })
+    }).then(function (r) { return r.ok ? "ok" : "fail"; }, function () { return "fail"; });
+  };
+})();
+</script>
+<script>
+/* ============ SHARED DATABASE: paste your Firebase database address between the quotes ============ */
+window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. https://malik-sports-default-rtdb.firebaseio.com
+/* ============ Do not edit below this line ============ */
+(function () {
+  var DB = String(window.MS_DB || "").replace(/\/+$/, "");
+  if (DB.indexOf("https://") !== 0) return;
+  var raw = Storage.prototype.setItem;
+  function pend() { try { return JSON.parse(localStorage.getItem("ms-pending-pk") || "[]"); } catch (e) { return []; } }
+  function flush() {
+    pend().forEach(function (o) {
+      fetch(DB + "/orders/" + o.id + ".json", { method: "PUT", body: JSON.stringify(JSON.stringify(o)) }).then(function (r) {
+        if (r.ok || r.status === 401) raw.call(localStorage, "ms-pending-pk", JSON.stringify(pend().filter(function (x) { return x.id !== o.id; })));
+      }, function () {});
+    });
+  }
+  /* When the shop saves a new order, also send it to the shared database. */
+  Storage.prototype.setItem = function (k, v) {
+    raw.call(this, k, v);
+    if (this === localStorage && k === "ms-orders-pk") {
+      try { var o = JSON.parse(v)[0]; if (o && o.id) { var q = pend(); q.push(o); raw.call(localStorage, "ms-pending-pk", JSON.stringify(q)); flush(); } } catch (e) {}
+    }
+  };
+  /* Load products and vouchers from the shared database. If they changed, reload once. */
+  function pull() {
+    if (location.hash === "#checkout") return;
+    Promise.all([
+      fetch(DB + "/products.json").then(function (r) { return r.json(); }),
+      fetch(DB + "/vouchers.json").then(function (r) { return r.json(); })
+    ]).then(function (x) {
+      var ch = false;
+      [["ms-products-pk", x[0]], ["ms-vouchers-pk", x[1]]].forEach(function (p) {
+        if (typeof p[1] === "string" && localStorage.getItem(p[0]) !== p[1]) { raw.call(localStorage, p[0], p[1]); ch = true; }
+      });
+      if (ch) location.reload();
+    }).catch(function () {});
+  }
+  flush(); pull();
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) pull(); });
+})();
+</script>
+</head>
+<body>
+<header id="app-header" class="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl" style="padding-top:env(safe-area-inset-top,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))">
+  <div class="wrap h-16 flex items-center justify-between gap-space-md">
+    <div class="flex items-center gap-space-sm min-w-0">
+      <button id="back-btn" type="button" data-act="back" hidden aria-label="Go back" class="w-11 h-11 -ml-2 rounded-xl flex items-center justify-center hover:bg-surface-container active:scale-95 transition-all"><span class="material-symbols-outlined">arrow_back</span></button>
+      <a id="logo-mark" href="#home" aria-label="Malik Sports home" class="block shrink-0">
+        <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#000000"/><path d="M7 24V9l9 9 9-9v15" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      </a>
+      <span id="hdr-title" class="font-headline-sm text-[20px] uppercase tracking-wider truncate md:hidden">Home</span>
+      <span class="hidden md:block font-headline-md text-[26px] uppercase tracking-wider leading-none">Malik Sports</span>
+    </div>
+    <nav class="hidden md:flex items-center gap-1" aria-label="Main">
+      <a href="#home" data-tab="home" class="px-4 py-2 rounded-xl font-label-lg text-label-lg uppercase tracking-wider transition-colors">Home</a>
+      <a href="#shop" data-tab="shop" class="px-4 py-2 rounded-xl font-label-lg text-label-lg uppercase tracking-wider transition-colors">Shop</a>
+      <a href="#cart" data-tab="cart" class="px-4 py-2 rounded-xl font-label-lg text-label-lg uppercase tracking-wider transition-colors">Cart</a>
+    </nav>
+    <div class="flex items-center gap-space-sm shrink-0">
+      <a href="#cart" aria-label="Open cart" class="relative flex items-center justify-center w-11 h-11 rounded-xl hover:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined">shopping_bag</span>
+        <span id="bag-count" class="absolute top-1 right-1 bg-secondary-container text-on-secondary font-label-md w-5 h-5 rounded-full flex items-center justify-center font-bold text-[11px] transition-transform">0</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<main class="relative w-full pt-16 pb-28 md:pb-16">
+  <div class="wrap">
+
+    <!-- HOME -->
+    <section id="view-home" hidden class="flex flex-col w-full pt-space-md">
+      <div class="relative w-full rounded-2xl overflow-hidden bg-surface-container-lowest p-gutter md:p-12 flex flex-col justify-end min-h-[320px] md:min-h-[440px] mb-space-lg shadow-xl" style="background-image:radial-gradient(120% 90% at 85% 12%,rgba(0,0,0,.08),transparent 55%),linear-gradient(180deg,#ffffff,#f1f1f1)">
+        <div id="hero-art" class="absolute right-[-14px] top-3 md:right-10 md:top-8 w-64 md:w-[28rem] pointer-events-none" aria-hidden="true"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/60 to-transparent"></div>
+        <div class="relative z-10 flex flex-col items-start gap-space-sm">
+          <div class="inline-flex items-center gap-space-xs px-space-sm py-space-xs bg-secondary-container/10 border border-secondary-container text-secondary-container rounded text-label-md uppercase font-bold tracking-wider">
+            <span class="material-symbols-outlined text-[16px]">bolt</span><span>New Season Drop</span>
+          </div>
+          <h1 class="font-headline-lg text-headline-lg md:text-headline-xl uppercase text-on-surface tracking-wide">Power Your <span class="text-secondary-container">Game</span></h1>
+          <p class="text-body-sm md:text-body-lg text-on-surface-variant max-w-[280px] md:max-w-md">Engineered for absolute performance. Gear up with elite equipment designed to dominate.</p>
+          <div class="flex items-center gap-space-md mt-space-sm w-full md:w-auto">
+            <button type="button" data-act="explore" class="flex-1 md:flex-none bg-secondary-container text-on-secondary font-label-lg text-label-lg px-space-lg py-space-md rounded-xl font-bold uppercase transition-transform active:scale-95 flex items-center justify-center gap-space-sm shadow-[0_0_20px_rgba(0,0,0,0.25)]">
+              <span>Explore Gear</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="home-pills" class="w-full overflow-x-auto no-scrollbar mb-space-lg"></div>
+      <div id="featured" class="flex items-center justify-between mb-space-md scroll-mt-20">
+        <h2 class="font-headline-sm text-headline-sm uppercase text-on-surface">Latest Gear</h2>
+        <a href="#shop" data-act="all-gear" class="text-label-md text-secondary-container uppercase tracking-wider font-bold">View All</a>
+      </div>
+      <div id="home-grid" class="grid grid-cols-2 md:grid-cols-4 gap-space-md w-full"></div>
+    </section>
+
+    <!-- SHOP -->
+    <section id="view-shop" hidden class="flex flex-col w-full pt-space-md">
+      <div class="flex flex-col gap-space-md mb-space-lg">
+        <div class="flex items-center justify-between gap-space-md">
+          <div>
+            <h1 class="font-headline-md text-headline-md text-on-surface uppercase tracking-wider">Catalog</h1>
+            <p class="text-body-sm text-on-surface-variant">Elite gear engineered for peak performance.</p>
+          </div>
+          <div class="flex items-center gap-space-xs bg-surface-container px-space-sm py-space-xs rounded-xl shrink-0">
+            <span class="material-symbols-outlined text-secondary-container text-[16px]">bolt</span>
+            <span class="text-label-md text-on-surface">Pro Series</span>
+          </div>
+        </div>
+        <div class="relative w-full md:max-w-xl">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+          <input id="product-search" type="text" autocomplete="off" placeholder="Search bats, balls, footwear, gear..." aria-label="Search gear" class="w-full bg-surface-container text-on-surface placeholder:text-outline text-body-md pl-12 pr-10 py-3 rounded-xl focus:outline-none focus:ring-1 focus:ring-tertiary transition-all">
+          <button id="clear-search" type="button" data-act="clear-search" hidden aria-label="Clear search" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface"><span class="material-symbols-outlined text-[18px]">close</span></button>
+        </div>
+        <div id="shop-pills" class="flex gap-space-sm overflow-x-auto no-scrollbar pb-2 md:flex-wrap md:overflow-visible"></div>
+      </div>
+      <div class="flex items-center justify-between mb-space-md">
+        <span id="results-count" class="text-label-md text-outline uppercase tracking-wider"></span>
+        <div class="flex items-center gap-space-xs text-secondary-container text-label-md">
+          <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1">local_fire_department</span><span>Trending Drops</span>
+        </div>
+      </div>
+      <div id="shop-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-space-md"></div>
+      <div id="shop-empty" hidden class="flex flex-col items-center justify-center py-16 text-center">
+        <div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-space-md text-outline"><span class="material-symbols-outlined text-[32px]">sports_cricket</span></div>
+        <h3 class="font-headline-sm text-on-surface text-xl mb-1">No gear found</h3>
+        <p class="text-body-sm text-outline max-w-xs mb-space-lg">Nothing matches that search or category. Try another keyword.</p>
+        <button type="button" data-act="reset-filters" class="bg-secondary-container text-on-secondary font-label-lg text-label-lg px-space-md py-2.5 rounded-xl font-bold shadow-md">Reset Filters</button>
+      </div>
+    </section>
+
+    <!-- CART -->
+    <section id="view-cart" hidden class="w-full pt-space-md">
+      <div class="grid lg:grid-cols-[minmax(0,1fr)_24rem] gap-x-space-lg items-start">
+        <div class="min-w-0">
+          <div class="flex items-center justify-between py-space-sm mb-space-md">
+            <div class="flex items-baseline gap-space-xs">
+              <h1 class="font-headline-md text-headline-md uppercase tracking-tight text-on-surface">My Cart</h1>
+              <span id="cart-count" class="font-label-lg text-label-lg text-secondary-container font-bold tracking-wider"></span>
+            </div>
+            <button type="button" data-act="clear-cart" class="flex items-center gap-1 px-space-sm py-1 rounded bg-surface-container text-on-surface-variant hover:text-error active:scale-95 transition-all text-label-md uppercase tracking-wider">
+              <span class="material-symbols-outlined text-[16px]">delete_sweep</span>Clear All
+            </button>
+          </div>
+          <div id="cart-progress" class="bg-surface-container-high p-space-md rounded-lg mb-space-lg shadow-md"></div>
+          <div id="cart-lines" class="flex flex-col gap-space-md mb-space-lg"></div>
+
+          <div class="bg-surface-container p-space-md rounded-lg mb-space-lg shadow-md">
+            <label for="promo-input" class="block text-body-sm text-on-surface-variant font-semibold">Voucher code</label>
+            <div class="flex gap-space-xs mt-space-xs">
+              <input id="promo-input" type="text" autocomplete="off" autocapitalize="characters" placeholder="Enter voucher code" class="flex-1 min-w-0 bg-surface-container-lowest px-space-md py-3 rounded text-on-surface text-body-sm uppercase placeholder:normal-case placeholder:text-outline focus:outline-none">
+              <button id="promo-btn" type="button" data-act="apply-promo" class="bg-secondary-container text-on-secondary text-label-lg px-space-md rounded font-bold">Apply</button>
+            </div>
+            <p id="promo-msg" role="status" class="text-body-sm mt-space-xs min-h-[20px]"></p>
+          </div>
+
+          <div class="mb-space-lg lg:mb-0">
+            <div class="flex items-center justify-between mb-space-sm">
+              <h3 class="text-label-lg uppercase tracking-wider text-on-surface font-bold flex items-center gap-1.5"><span class="material-symbols-outlined text-tertiary text-[18px]">bolt</span>Delivery</h3>
+              <span class="text-label-md text-tertiary uppercase tracking-wider">Across Pakistan</span>
+            </div>
+            <div class="flex flex-col gap-space-xs">
+              <label id="opt-standard" class="delivery-option flex items-center justify-between gap-space-md p-space-md rounded-lg cursor-pointer transition-all">
+                <div class="flex items-center gap-space-md min-w-0">
+                  <input type="radio" name="delivery" value="standard" class="w-4 h-4 accent-secondary-container">
+                  <div class="flex flex-col"><span class="font-headline-sm text-[15px] text-on-surface">Standard Delivery</span><span class="text-body-sm text-on-surface-variant text-[12px]">Arrives in 4–6 working days</span></div>
+                </div>
+                <span id="price-standard" class="text-label-lg font-bold text-secondary-container uppercase tracking-wider shrink-0">FREE</span>
+              </label>
+              <label id="opt-express" class="delivery-option flex items-center justify-between gap-space-md p-space-md rounded-lg cursor-pointer transition-all">
+                <div class="flex items-center gap-space-md min-w-0">
+                  <input type="radio" name="delivery" value="express" class="w-4 h-4 accent-secondary-container">
+                  <div class="flex flex-col">
+                    <div class="flex items-center gap-space-xs flex-wrap"><span class="font-headline-sm text-[15px] text-on-surface">Express Delivery</span><span class="bg-tertiary/10 text-tertiary text-[10px] px-1 rounded font-bold uppercase tracking-wider">Fastest</span></div>
+                    <span class="text-body-sm text-on-surface-variant text-[12px]">Arrives in 2–4 working days</span>
+                  </div>
+                </div>
+                <span class="text-label-lg font-bold text-on-surface shrink-0">Rs 350</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="min-w-0 lg:sticky lg:top-24">
+          <div class="bg-surface-container p-space-md rounded-lg mb-space-lg shadow-lg">
+            <h3 class="font-headline-sm text-[16px] uppercase tracking-wider text-on-surface mb-space-md">Order Summary</h3>
+            <div id="cart-summary" class="flex flex-col gap-space-sm text-body-sm"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-space-sm mb-space-lg">
+            <div class="bg-surface-container-low p-space-md rounded-lg flex items-start gap-space-sm">
+              <span class="material-symbols-outlined text-secondary-container text-[24px] mt-0.5">verified_user</span>
+              <div class="flex flex-col"><span class="text-label-md text-on-surface uppercase font-bold tracking-wider">100% Certified</span><span class="text-on-surface-variant text-[11px] leading-tight mt-0.5">Genuine English Willow &amp; Pro Test match gear</span></div>
+            </div>
+            <div class="bg-surface-container-low p-space-md rounded-lg flex items-start gap-space-sm">
+              <span class="material-symbols-outlined text-tertiary text-[24px] mt-0.5">published_with_changes</span>
+              <div class="flex flex-col"><span class="text-label-md text-on-surface uppercase font-bold tracking-wider">30-Day Guarantee</span><span class="text-on-surface-variant text-[11px] leading-tight mt-0.5">Easy exchange and return policy</span></div>
+            </div>
+          </div>
+          <div class="bg-surface-container-highest/90 p-space-md rounded-xl shadow-xl flex flex-col gap-space-sm">
+            <button id="checkout-btn" type="button" data-act="checkout" class="w-full bg-secondary-container hover:bg-secondary-fixed text-on-secondary py-4 px-space-md rounded font-headline-sm text-[18px] uppercase tracking-wider flex items-center justify-between shadow-lg active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none">
+              <span class="flex items-center gap-space-xs font-bold">Order Now<span class="material-symbols-outlined text-[20px]">arrow_forward</span></span>
+              <span id="checkout-total" class="font-bold text-[20px] tabular-nums">Rs 0</span>
+            </button>
+            <div class="flex items-center justify-between flex-wrap gap-space-sm pt-1">
+              <div class="flex items-center gap-1 text-on-surface-variant"><span class="material-symbols-outlined text-[15px] text-secondary-container">lock</span><span class="text-label-md text-[11px] uppercase tracking-wider">Secure Checkout</span></div>
+              <div class="flex items-center gap-1.5 opacity-80">
+                <span class="bg-surface-container-lowest text-on-surface text-[10px] font-bold px-1.5 py-0.5 rounded">COD</span>
+                <span class="bg-surface-container-lowest text-on-surface text-[10px] font-bold px-1.5 py-0.5 rounded">EASYPAISA</span>
+                <span class="bg-surface-container-lowest text-secondary-container text-[10px] font-bold px-1.5 py-0.5 rounded">JAZZCASH</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ORDER -->
+    <section id="view-order" hidden class="w-full pt-space-sm"><div id="order-body" class="max-w-2xl mx-auto flex flex-col space-y-5"></div></section>
+
+    <!-- PRODUCT PAGE -->
+    <section id="view-product" hidden class="w-full pt-space-sm"><div id="product-body" class="max-w-2xl mx-auto flex flex-col gap-space-md pb-28"></div></section>
+
+    <!-- CHECKOUT -->
+    <section id="view-checkout" hidden class="w-full pt-space-sm"><div id="checkout-body" class="max-w-2xl mx-auto flex flex-col space-y-space-md"></div></section>
+
+  </div>
+</main>
+
+<div id="product-bar" hidden class="fixed bottom-0 inset-x-0 z-50 flex gap-space-sm px-space-md pt-space-sm bg-surface/95 backdrop-blur-xl border-t border-surface-variant" style="padding-bottom:max(12px,env(safe-area-inset-bottom))"></div>
+
+<nav id="bottom-nav" aria-label="Main" class="fixed bottom-0 inset-x-0 z-50 md:hidden bg-surface/90 backdrop-blur-xl" style="padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))">
+  <div class="flex justify-around items-center h-20">
+    <a href="#home" data-tab="home" class="flex flex-col items-center justify-center gap-space-xs w-16 h-16 transition-all rounded-xl"><span class="material-symbols-outlined">home</span><span class="text-label-md">Home</span></a>
+    <a href="#shop" data-tab="shop" class="flex flex-col items-center justify-center gap-space-xs w-16 h-16 transition-all rounded-xl"><span class="material-symbols-outlined">storefront</span><span class="text-label-md">Shop</span></a>
+    <a href="#cart" data-tab="cart" class="flex flex-col items-center justify-center gap-space-xs w-16 h-16 transition-all rounded-xl"><span class="material-symbols-outlined">shopping_cart</span><span class="text-label-md">Cart</span></a>
+  </div>
+</nav>
+
+<div id="toast" role="status" aria-live="polite" class="fixed left-1/2 -translate-x-1/2 translate-y-4 opacity-0 z-[60] max-w-[calc(100vw-2rem)] bg-secondary-container text-on-secondary px-space-md py-3 rounded-xl shadow-2xl flex items-center gap-space-sm transition-all duration-300 pointer-events-none">
+  <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1">check_circle</span>
+  <span id="toast-msg" class="text-label-lg font-bold"></span>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var money = function (n) { return "Rs " + Math.round(Number(n)).toLocaleString("en-PK"); };
+  var r2 = function (n) { return Math.round(n); };
+  var rd = function (k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
+  var wr = function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+  /* ---------- Product art (inline SVG, no external images) ---------- */
+  var svg = function (inner, label) {
+    return '<svg viewBox="0 0 160 120" class="w-full h-full" role="img" aria-label="' + label + '" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>';
+  };
+  var ART = {
+    bat: function () { return svg(
+      '<ellipse cx="80" cy="108" rx="34" ry="4" fill="#000" opacity=".35"/>' +
+      '<g transform="translate(76 64) rotate(35)">' +
+      '<path d="M-4-32L-15-22V28Q-15 34-9 34H9Q15 34 15 28V-22L4-32Z" fill="#d8b48a"/>' +
+      '<rect x="2" y="-22" width="13" height="56" rx="5" fill="#000" opacity=".14"/>' +
+      '<rect x="-15" y="-4" width="30" height="14" fill="#d6d6d6"/><rect x="-15" y="-1" width="30" height="2" fill="#000000"/>' +
+      '<rect x="-4" y="-62" width="8" height="32" rx="3" fill="#f1f1f1"/>' +
+      '<rect x="-4" y="-58" width="8" height="2" fill="#000000"/><rect x="-4" y="-52" width="8" height="2" fill="#000000"/><rect x="-4" y="-46" width="8" height="2" fill="#000000"/><rect x="-4" y="-40" width="8" height="2" fill="#000000"/>' +
+      '</g>', "Cricket bat"); },
+    ball: function () { return svg(
+      '<ellipse cx="80" cy="108" rx="30" ry="4" fill="#000" opacity=".35"/>' +
+      '<circle cx="80" cy="62" r="34" fill="#b3202a"/>' +
+      '<path d="M47 62Q80 44 113 62" fill="none" stroke="#f3e9dc" stroke-width="2" stroke-dasharray="3 3"/>' +
+      '<path d="M47 67Q80 49 113 67" fill="none" stroke="#f3e9dc" stroke-width="2" stroke-dasharray="3 3"/>' +
+      '<path d="M47 64.5Q80 46.5 113 64.5" fill="none" stroke="#7d1119" stroke-width="2"/>' +
+      '<ellipse cx="66" cy="44" rx="10" ry="6" fill="#fff" opacity=".2" transform="rotate(-30 66 44)"/>' +
+      '<circle cx="80" cy="62" r="34" fill="none" stroke="#000000" stroke-opacity=".4" stroke-width="1.5"/>', "Cricket ball"); },
+    football: function () { return svg(
+      '<ellipse cx="80" cy="110" rx="30" ry="4" fill="#000" opacity=".35"/>' +
+      '<circle cx="80" cy="62" r="38" fill="#ececec" stroke="#00707e" stroke-width="2"/>' +
+      '<path d="M80 50V28M91.4 58.3L114 51M87.1 71.7L101 91M72.9 71.7L59 91M68.6 58.3L46 51" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round"/>' +
+      '<polygon points="80,50 91.4,58.3 87.1,71.7 72.9,71.7 68.6,58.3" fill="#000000"/>' +
+      '<path d="M54 40Q66 30 82 30" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="3" stroke-linecap="round"/>', "Football"); },
+    shoe: function () { return svg(
+      '<path d="M28 84V50Q28 44 35 44H52Q58 44 62 50L74 66Q80 72 92 72L126 74Q140 76 140 86V90H28Z" fill="#f1f1f1" stroke="#3d3d3d" stroke-width="1.5"/>' +
+      '<path d="M28 84H140V90H28Z" fill="#000000"/>' +
+      '<path d="M40 78Q70 70 104 80" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round"/>' +
+      '<path d="M62 54l8-4M66 60l8-4M70 66l8-4" stroke="#4a4a4a" stroke-width="2" stroke-linecap="round"/>' +
+      '<g fill="#4a4a4a"><path d="M36 90l3 8 3-8z"/><path d="M50 90l3 8 3-8z"/><path d="M64 90l3 8 3-8z"/><path d="M106 90l3 8 3-8z"/><path d="M120 90l3 8 3-8z"/><path d="M130 90l3 8 3-8z"/></g>', "Spiked cricket shoe"); },
+    gloves: function () { return svg(
+      '<g fill="#e2e2e2" stroke="#000000" stroke-width="1.5">' +
+      '<rect x="52" y="24" width="14" height="40" rx="7"/><rect x="67" y="14" width="14" height="50" rx="7"/><rect x="82" y="16" width="14" height="48" rx="7"/><rect x="97" y="26" width="14" height="38" rx="7"/>' +
+      '<rect x="108" y="48" width="14" height="34" rx="7" transform="rotate(35 115 65)"/>' +
+      '<rect x="52" y="48" width="60" height="44" rx="10"/></g>' +
+      '<rect x="56" y="92" width="52" height="16" rx="4" fill="#d6d6d6"/><rect x="56" y="97" width="52" height="3" fill="#000000"/>' +
+      '<path d="M60 60H104M60 70H104" stroke="#3d3d3d" stroke-width="2" stroke-dasharray="3 3"/>', "Batting gloves"); },
+    helmet: function () { return svg(
+      '<path d="M34 82C34 42 62 28 86 30C112 32 128 52 128 82Z" fill="#f1f1f1" stroke="#3d3d3d" stroke-width="2"/>' +
+      '<path d="M48 44C60 36 78 33 92 35" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round"/>' +
+      '<path d="M42 56C54 47 72 43 90 45" fill="none" stroke="#00707e" stroke-width="2" stroke-linecap="round"/>' +
+      '<rect x="34" y="78" width="96" height="6" rx="3" fill="#d6d6d6"/>' +
+      '<path d="M118 70L142 74L140 78H118Z" fill="#d6d6d6"/>' +
+      '<g stroke="#4a4a4a" stroke-width="2" fill="none" stroke-linecap="round"><path d="M122 78V100M130 78V102M138 78V98M120 88H140M121 96H139"/><path d="M120 100Q130 107 140 98"/></g>', "Cricket helmet"); },
+    duffel: function () { return svg(
+      '<path d="M58 54C58 30 102 30 102 54" fill="none" stroke="#4a4a4a" stroke-width="4" stroke-linecap="round"/>' +
+      '<rect x="26" y="52" width="108" height="46" rx="16" fill="#f1f1f1" stroke="#3d3d3d" stroke-width="2"/>' +
+      '<path d="M32 66H128" stroke="#000000" stroke-width="3" stroke-dasharray="4 3"/>' +
+      '<rect x="52" y="74" width="44" height="18" rx="5" fill="#d6d6d6" stroke="#000000" stroke-width="1.5"/>' +
+      '<circle cx="38" cy="78" r="4" fill="#000000" opacity=".85"/><circle cx="122" cy="78" r="4" fill="#000000" opacity=".85"/>', "Kit bag"); }
+  };
+  var art = function (t) { return ART[t](); };
+  var pic = function (p) { return p.img ? '<img src="' + p.img + '" alt="' + String(p.name).replace(/"/g, "&quot;") + '" class="absolute inset-0 w-full h-full object-cover">' : art(p.type); };
+
+  /* ---------- Catalog ---------- */
+  var CATS = [["all","All Gear"],["bats","Bats"],["balls","Balls"],["footballs","Footballs"],["footwear","Footwear"],["gloves","Gloves"],["helmets","Helmets"],["accessories","Accessories"]];
+  var TONE = { green: "bg-primary-container text-secondary-container", cyan: "bg-tertiary-container text-tertiary", solid: "bg-secondary-container text-on-secondary", red: "bg-error-container text-error" };
+  var DEFAULTS = [
+    { id:"beast", name:"Beast Pro Bat", cartName:"Malik Beast Pro Willow Bat", cat:"bats", type:"bat", price:83700, rating:4.9, reviews:128, tag:"New Drop", tone:"green", sub:"English Willow", cartTag:"PRO SPEC", meta:[["Size","Men's SH"],["Weight","2lb 8oz"]], keys:"cricket bat willow" },
+    { id:"pro1000", name:"Malik Pro 1000 Kashmir Willow", cartName:"Malik Pro 1000 Kashmir Willow", cat:"bats", type:"bat", price:70000, rating:4.9, reviews:128, tag:"Pro Spec", tone:"green", sub:"Kashmir Willow", cartTag:"PRO SPEC", meta:[["Willow","Kashmir"],["Grade","Pro Spec"]], keys:"cricket bat willow" },
+    { id:"apex", name:"Apex Match Leather Cricket Ball", cartName:"Apex Match Leather Ball", cat:"balls", type:"ball", price:5600, rating:4.8, reviews:94, tag:"Match Day", tone:"cyan", sub:"Match Ball", cartTag:"MATCH BALL", meta:[["Type","4-Piece County"],["Color","Cherry Red"]], keys:"cricket leather red" },
+    { id:"testball", name:"Test Match Ball", cartName:"Test Match Ball", cat:"balls", type:"ball", price:9800, rating:4.7, reviews:62, tag:"Handcrafted", tone:"red", sub:"Red Ball", cartTag:"RED BALL", meta:[["Type","Red Ball"],["Finish","Hand-stitched"]], keys:"cricket leather red" },
+    { id:"strikeforce", name:"Strike Force", cartName:"Strike Force Match Football", cat:"footballs", type:"football", price:41700, rating:4.8, reviews:94, tag:"FIFA Pro", tone:"cyan", sub:"Match Ball", cartTag:"FIFA PRO", meta:[["Type","Match Ball"],["Grade","FIFA Pro"]], keys:"football soccer" },
+    { id:"strikepro", name:"Strike Pro Football FIFA Quality", cartName:"Strike Pro Football", cat:"footballs", type:"football", price:12600, rating:4.7, reviews:210, tag:"FIFA Quality", tone:"cyan", sub:"Football", cartTag:"FIFA", meta:[["Type","Football"],["Grade","FIFA Quality"]], keys:"football soccer" },
+    { id:"velocity", name:"Velocity Spikes", cartName:"Velocity Spikes Shoes", cat:"footwear", type:"shoe", price:50400, rating:5.0, reviews:215, tag:"Best Seller", tone:"solid", sub:"Footwear", cartTag:"SPIKES", meta:[["Size","UK 9"],["Color","Stealth Neon"]], keys:"cricket shoes spikes" },
+    { id:"gloves", name:"Pro Batting Gloves - Ultra Grip", cartName:"Pro Batting Gloves", cat:"gloves", type:"gloves", price:9800, rating:4.9, reviews:315, tag:"Ultra Grip", tone:"green", sub:"Batting Gloves", cartTag:"GRIP", meta:[["Type","Batting"],["Grip","Ultra Grip"]], keys:"batting gloves" },
+    { id:"helmet", name:"Titanium Helmet", cartName:"Titanium Grill Helmet", cat:"helmets", type:"helmet", price:37800, rating:4.9, reviews:78, tag:"Pro Grade", tone:"green", sub:"Safety Gear", cartTag:"SAFETY", meta:[["Grill","Titanium"],["Grade","Pro"]], keys:"cricket helmet grill safety" },
+    { id:"duffel", name:"Alpha Duffel", cartName:"Alpha Duffel Kit Bag", cat:"accessories", type:"duffel", price:26600, rating:4.9, reviews:140, tag:"Waterproof", tone:"cyan", sub:"Gear Bag", cartTag:"GEAR BAG", meta:[["Type","Gear Bag"],["Build","Waterproof"]], keys:"duffel bag kit" }
+  ];
+  /* Products live in shared storage so the owner page (admin.html) can add or delete them. */
+  var CATALOG = rd("ms-products-pk", null);
+  if (!Array.isArray(CATALOG)) { CATALOG = DEFAULTS; wr("ms-products-pk", CATALOG); }
+  var P = {}; CATALOG.forEach(function (p) { P[p.id] = p; });
+  var FEATURED = CATALOG.slice(0, 8).map(function (p) { return p.id; }); // newest first
+
+  /* ---------- Money rules ---------- */
+  /* Delivery charges in Rs. Change these three numbers to your own. */
+  var TAX = 0, EXPRESS = 350, STANDARD = 150, FREE_AT = 10000;
+  /* Vouchers are made in admin.html. A voucher works until its expiry time. */
+  function findVoucher(code) {
+    var c = String(code || "").trim().toUpperCase(), v = rd("ms-vouchers-pk", []).filter(function (x) { return x.code === c; })[0];
+    if (!v) return { state: "none" };
+    return { state: Date.now() < v.expiresAt ? "ok" : "expired", v: v };
+  }
+  /* A product gets the discount only if it is not "Voucher: OFF" and (when the voucher has a product list) is on that list. */
+  function okFor(p, v) { return !p.noVoucher && (!v || !v.products || !v.products.length || v.products.indexOf(p.id) > -1); }
+  function onlyOn(v) {
+    var n = (v.products || []).filter(function (id) { return P[id] && !P[id].noVoucher; }).map(function (id) { return P[id].cartName; });
+    return n.length ? "This voucher works only on: " + n.join(", ") + "." : "This voucher does not apply to the items in your cart.";
+  }
+  function promoCheck() { if (S.promo && findVoucher(S.promo).state !== "ok") { ui.promoMsg = "Voucher " + S.promo + " is no longer valid."; S.promo = null; save(); } }
+  function totals(lines, delivery) {
+    var sub = r2(lines.reduce(function (s, l) { return s + P[l.id].price * l.qty; }, 0));
+    var fv = S.promo ? findVoucher(S.promo) : null, vc = fv && fv.state === "ok" ? fv.v : null;
+    var elig = r2(lines.reduce(function (s, l) { return okFor(P[l.id], vc) ? s + P[l.id].price * l.qty : s; }, 0));
+    var discount = !vc ? 0 : vc.type === "pct" ? r2(elig * vc.value / 100) : Math.min(r2(vc.value), elig);
+    var tax = r2((sub - discount) * TAX);
+    var shipping = 0;
+    if (sub > 0) shipping = delivery === "express" ? EXPRESS : (sub >= FREE_AT ? 0 : STANDARD);
+    return { sub: sub, discount: discount, code: vc ? vc.code : null, tax: tax, shipping: shipping, total: r2(sub - discount + tax + shipping) };
+  }
+  var units = function (lines) { return lines.reduce(function (s, l) { return s + l.qty; }, 0); };
+
+  /* ---------- State ---------- */
+  var KEY = "malik-sports-v1";
+  function seed() { return { v: 1, cart: [], promo: null, delivery: "standard" }; }
+  function load() {
+    try { var raw = localStorage.getItem(KEY); if (raw) { var s = JSON.parse(raw); if (s && s.v === 1) return s; } } catch (e) {}
+    return seed();
+  }
+  var S = load();
+  S.cart = (S.cart || []).filter(function (l) { return P[l.id]; });
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  var ui = { cat: "all", q: "", orderId: null, pay: "cod", promoMsg: "", productId: null };
+
+  /* ---------- Toast ---------- */
+  var tt;
+  function toast(msg) {
+    var el = $("#toast"); $("#toast-msg").textContent = msg;
+    el.classList.remove("opacity-0", "translate-y-4");
+    clearTimeout(tt);
+    tt = setTimeout(function () { el.classList.add("opacity-0", "translate-y-4"); }, 2400);
+  }
+
+  /* ---------- Routing ---------- */
+  var ROUTES = {
+    home: { title: "Home", tab: "home" }, shop: { title: "Shop", tab: "shop" }, cart: { title: "Cart", tab: "cart" },
+    checkout: { title: "Checkout", tab: "cart", stack: true }, order: { title: "Order placed", tab: "shop", stack: true }, product: { title: "Product", tab: "shop", stack: true }
+  };
+  var cur = null, prev = null;
+  function route() { var h = location.hash.replace("#", ""); if (h.indexOf("product-") === 0) { ui.productId = h.slice(8); return "product"; } return ROUTES[h] ? h : "home"; }
+  function go(r) { if (location.hash === "#" + r) render(); else location.hash = r; }
+
+  var ACTIVE_BOTTOM = ["bg-surface-container", "text-secondary-container", "font-bold"];
+  function chrome(r) {
+    var R = ROUTES[r];
+    $("#hdr-title").textContent = R.title;
+    $("#back-btn").hidden = !R.stack;
+    $("#logo-mark").classList.toggle("hidden", !!R.stack);
+    $("#logo-mark").classList.add("md:block");
+    $("#bottom-nav").classList.toggle("hidden", !!R.stack);
+    document.querySelectorAll("[data-tab]").forEach(function (a) {
+      var on = a.dataset.tab === R.tab;
+      var inBottom = !!a.closest("#bottom-nav");
+      if (inBottom) {
+        ACTIVE_BOTTOM.forEach(function (c) { a.classList.toggle(c, on); });
+        a.classList.toggle("text-on-surface-variant", !on);
+      } else {
+        a.classList.toggle("text-secondary-container", on);
+        a.classList.toggle("bg-surface-container", on);
+        a.classList.toggle("text-on-surface-variant", !on);
+      }
+      if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
+    var n = units(S.cart), b = $("#bag-count");
+    b.textContent = n; b.hidden = n === 0;
+  }
+
+  /* ---------- Shared pieces ---------- */
+  function pills(active, target) {
+    return CATS.map(function (c) {
+      var on = c[0] === active;
+      return '<button type="button" data-act="cat" data-cat="' + c[0] + '" class="' + (target === "home" ? "px-space-lg py-space-sm" : "px-space-md py-2") + ' rounded-xl text-label-lg whitespace-nowrap uppercase tracking-wider transition-all ' + (on ? "bg-secondary-container text-on-secondary font-bold shadow-md" : "bg-surface-container text-on-surface hover:bg-surface-bright") + '">' + c[1] + '</button>';
+    }).join("");
+  }
+  function card(p) {
+    return '<article data-act="open" data-id="' + p.id + '" role="link" tabindex="0" class="cursor-pointer flex flex-col justify-between bg-surface-container rounded-xl p-space-sm relative group overflow-hidden shadow-md">' +
+      '<span class="absolute top-3 left-3 z-10 ' + TONE[p.tone] + ' text-[10px] font-bold uppercase px-2 py-0.5 rounded tracking-wider">' + p.tag + '</span>' +
+      '<div class="w-full h-36 bg-surface-container-lowest rounded-lg mb-space-sm overflow-hidden relative">' +
+        '<div class="w-full h-full pt-3 transition-transform duration-300 group-hover:scale-105">' + pic(p) + '</div>' +
+      '</div>' +
+      '<div class="flex flex-col flex-1 justify-between">' +
+        '<div><span class="text-outline text-[11px] uppercase tracking-wider">' + p.sub + '</span>' +
+        '<h3 class="font-headline-sm text-on-surface text-[15px] leading-snug line-clamp-2">' + p.name + '</h3>' +
+        '<div class="flex items-center gap-1 mt-1"><span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings:\'FILL\' 1">star</span><span class="text-label-md text-on-surface">' + p.rating.toFixed(1) + '</span><span class="text-outline text-[11px]">(' + p.reviews + ')</span></div></div>' +
+        '<div class="flex items-center justify-between mt-space-sm pt-2"><span class="font-headline-sm text-secondary-container text-lg tabular-nums">' + money(p.price) + '</span>' +
+        '<button type="button" data-act="add" data-id="' + p.id + '" aria-label="Add ' + p.name + ' to cart" class="bg-secondary-container text-on-secondary p-2 rounded-lg hover:bg-secondary-fixed-dim transition-all shadow-sm active:scale-90"><span class="material-symbols-outlined text-[18px]">add_shopping_cart</span></button></div>' +
+      '</div></article>';
+  }
+
+  /* ---------- Home / Shop ---------- */
+  function renderHome() {
+    if (!$("#hero-art").firstChild) {
+      $("#hero-art").innerHTML = '<div class="flex items-end"><div class="w-3/5">' + art("bat") + '</div><div class="w-2/5 -ml-6">' + art("football") + '</div></div>';
+    }
+    $("#home-pills").innerHTML = '<div class="flex items-center gap-space-sm w-max">' + pills("none", "home") + '</div>';
+    $("#home-grid").innerHTML = FEATURED.map(function (id) { return card(P[id]); }).join("");
+  }
+  function renderShop() {
+    $("#shop-pills").innerHTML = pills(ui.cat, "shop");
+    var input = $("#product-search"); if (input.value !== ui.q) input.value = ui.q;
+    $("#clear-search").hidden = !ui.q;
+    var q = ui.q.toLowerCase().trim();
+    var list = CATALOG.filter(function (p) {
+      return (ui.cat === "all" || p.cat === ui.cat) && (!q || (p.name + " " + p.sub + " " + p.cat + " " + p.keys).toLowerCase().indexOf(q) > -1);
+    });
+    $("#results-count").textContent = "Showing " + list.length + " high-performance item" + (list.length === 1 ? "" : "s");
+    $("#shop-grid").innerHTML = list.map(card).join("");
+    $("#shop-grid").hidden = list.length === 0;
+    $("#shop-empty").hidden = list.length !== 0;
+  }
+
+  /* ---------- Cart ---------- */
+  function lineHTML(l) {
+    var p = P[l.id];
+    var meta = p.meta.map(function (m) { return '<span class="text-label-md text-on-surface-variant">' + m[0] + ': <span class="text-on-surface font-semibold">' + m[1] + '</span></span>'; }).join('<span class="text-outline-variant text-[10px]">•</span>');
+    return '<div class="cart-line relative bg-surface-container p-space-md rounded-lg shadow-md transition-all duration-200 hover:bg-surface-container-high" data-line="' + p.id + '">' +
+      '<div class="flex gap-space-md">' +
+        '<div class="relative w-24 h-28 bg-surface-container-lowest rounded overflow-hidden shrink-0"><div class="w-full h-full pt-2">' + pic(p) + '</div><span class="absolute top-1 left-1 bg-surface-container-lowest/90 text-secondary-container text-[9px] font-bold px-1.5 py-0.5 rounded tracking-widest uppercase">' + p.cartTag + '</span></div>' +
+        '<div class="flex flex-col flex-1 min-w-0 justify-between">' +
+          '<div><div class="flex items-start justify-between gap-space-xs"><h2 class="font-headline-sm text-[17px] leading-tight text-on-surface truncate">' + p.cartName + '</h2>' +
+          '<button type="button" data-act="remove" data-id="' + p.id + '" aria-label="Remove ' + p.cartName + '" class="text-on-surface-variant hover:text-error transition-colors p-1"><span class="material-symbols-outlined text-[18px]">close</span></button></div>' +
+          '<div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">' + meta + '</div></div>' +
+          '<div class="flex items-center justify-between pt-space-xs mt-1"><span class="font-headline-md text-[22px] text-secondary-container tracking-tight tabular-nums">' + money(p.price * l.qty) + '</span>' +
+          '<div class="flex items-center bg-surface-container-lowest rounded p-0.5">' +
+            '<button type="button" data-act="qty" data-id="' + p.id + '" data-d="-1" aria-label="Decrease quantity" class="w-8 h-8 flex items-center justify-center text-on-surface hover:text-secondary-container active:scale-90 transition-transform"><span class="material-symbols-outlined text-[16px]">remove</span></button>' +
+            '<span class="text-label-md text-on-surface font-bold px-2 w-8 text-center tabular-nums">' + l.qty + '</span>' +
+            '<button type="button" data-act="qty" data-id="' + p.id + '" data-d="1" aria-label="Increase quantity" class="w-8 h-8 flex items-center justify-center text-on-surface hover:text-secondary-container active:scale-90 transition-transform"><span class="material-symbols-outlined text-[16px]">add</span></button>' +
+          '</div></div>' +
+        '</div></div></div>';
+  }
+  function renderCart() {
+    promoCheck();
+    var t = totals(S.cart, S.delivery), n = units(S.cart);
+    $("#cart-count").textContent = "(" + n + " " + (n === 1 ? "Item" : "Items") + ")";
+    var unlocked = t.sub >= FREE_AT, pct = Math.min(100, Math.round(t.sub / FREE_AT * 100));
+    $("#cart-progress").innerHTML =
+      '<div class="flex items-center justify-between mb-space-xs gap-space-sm"><div class="flex items-center gap-space-xs min-w-0"><span class="material-symbols-outlined text-secondary-container text-[20px]">local_shipping</span><span class="text-label-md uppercase text-on-surface font-bold tracking-wider">' + (unlocked ? "Free delivery unlocked!" : "Add " + money(FREE_AT - t.sub) + " for free delivery") + '</span></div><span class="text-label-md text-secondary-container font-bold tabular-nums">' + pct + '%</span></div>' +
+      '<div class="w-full bg-surface-container-lowest h-1.5 rounded-full overflow-hidden"><div class="bg-secondary-container h-full rounded-full transition-all duration-500" style="width:' + pct + '%"></div></div>' +
+      '<p class="text-on-surface-variant mt-space-xs text-[11px]">Orders over ' + money(FREE_AT) + ' get free standard delivery.</p>';
+    $("#cart-lines").innerHTML = S.cart.length ? S.cart.map(lineHTML).join("") :
+      '<div class="flex flex-col items-center text-center bg-surface-container rounded-lg py-12 px-space-md"><span class="material-symbols-outlined text-[40px] text-outline mb-space-sm">shopping_cart</span><h3 class="font-headline-sm text-xl text-on-surface">Your cart is empty</h3><p class="text-body-sm text-on-surface-variant mt-1 mb-space-md">Add gear from the shop and it will show up here.</p><button type="button" data-act="go" data-r="shop" class="bg-secondary-container text-on-secondary text-label-lg px-space-md py-2.5 rounded-xl font-bold uppercase tracking-wider">Browse Gear</button></div>';
+    var sd = S.delivery === "express";
+    $("#opt-standard").className = "delivery-option flex items-center justify-between gap-space-md p-space-md rounded-lg cursor-pointer transition-all " + (sd ? "bg-surface-container hover:bg-surface-container-high" : "bg-surface-container-high");
+    $("#opt-express").className = "delivery-option flex items-center justify-between gap-space-md p-space-md rounded-lg cursor-pointer transition-all " + (sd ? "bg-surface-container-high" : "bg-surface-container hover:bg-surface-container-high");
+    document.querySelector('input[name="delivery"][value="standard"]').checked = !sd;
+    document.querySelector('input[name="delivery"][value="express"]').checked = sd;
+    $("#price-standard").textContent = (t.sub === 0 || t.sub >= FREE_AT) ? "FREE" : money(STANDARD);
+    var row = function (a, b, cls) { return '<div class="flex items-center justify-between gap-space-sm ' + (cls || "text-on-surface-variant") + '"><span>' + a + '</span><span class="font-semibold tabular-nums">' + b + '</span></div>'; };
+    $("#cart-summary").innerHTML =
+      row("Cart Subtotal", money(t.sub)) +
+      (t.discount ? row("Voucher " + t.code, "-" + money(t.discount), "text-secondary-container") : "") +
+      row("Delivery", t.shipping === 0 ? "FREE" : (S.delivery === "express" ? "+" : "") + money(t.shipping), t.shipping === 0 ? "text-on-surface-variant" : "text-on-surface-variant") +
+      (t.tax ? row("Tax", money(t.tax)) : "") +
+      '<div class="h-px bg-surface-variant my-space-xs"></div>' +
+      '<div class="flex items-baseline justify-between gap-space-sm pt-space-xs"><div class="flex flex-col"><span class="font-headline-sm text-[18px] uppercase tracking-wide text-on-surface font-bold">Total Amount</span><span class="text-on-surface-variant text-[11px]">Delivery included</span></div>' +
+      '<div class="flex flex-col items-end"><span class="font-headline-md text-headline-md text-secondary-container leading-none tabular-nums">' + money(t.total) + '</span><span class="text-tertiary uppercase text-[10px] tracking-widest mt-1">PKR</span></div></div>';
+    var pin = $("#promo-input"), pb = $("#promo-btn"), pm = $("#promo-msg");
+    pin.value = S.promo || pin.value; pin.readOnly = !!S.promo; pb.textContent = S.promo ? "Remove" : "Apply"; pb.dataset.act = S.promo ? "remove-promo" : "apply-promo";
+    var fx = S.promo ? findVoucher(S.promo).v : null, ex = S.cart.filter(function (l) { return !okFor(P[l.id], fx); }).map(function (l) { return P[l.id].cartName; });
+    pm.textContent = !S.promo ? ui.promoMsg : !S.cart.length ? "Voucher " + S.promo + " is ready. Add items to use it." : t.discount > 0 ? "Voucher " + S.promo + " applied. You save " + money(t.discount) + "." + (ex.length ? " Not valid on: " + ex.join(", ") + "." : "") : "Voucher " + S.promo + " does not apply to the items in your cart.";
+    pm.className = "text-body-sm mt-space-xs min-h-[20px] " + (S.promo && t.discount > 0 ? "text-secondary-container font-semibold" : S.promo && !S.cart.length ? "text-on-surface-variant" : "text-error");
+    $("#checkout-total").textContent = money(t.total);
+    $("#checkout-btn").disabled = S.cart.length === 0;
+  }
+
+  /* ---------- Checkout & order confirmation ---------- */
+  // OWNER: put your real Easypaisa / JazzCash numbers here. Customers see them at checkout.
+  var PAY = { easypaisa: { name: "Easypaisa", no: "0333-0666674" }, jazzcash: { name: "JazzCash", no: "0333-0666674" } };
+  var METHODS = [["cod", "Cash on Delivery", "payments", "Pay the rider in cash when your parcel arrives"], ["easypaisa", "Easypaisa", "smartphone", "Send the money from your Easypaisa app"], ["jazzcash", "JazzCash", "smartphone", "Send the money from your JazzCash app"]];
+  var STATUS = { pending: ["Waiting for confirmation", "text-tertiary"], confirmed: ["Confirmed", "text-secondary-container"], dispatched: ["On the way", "text-secondary-container"], delivered: ["Delivered", "text-secondary-container"], cancelled: ["Cancelled", "text-error"] };
+  var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return "&#" + c.charCodeAt(0) + ";"; }); };
+  var orders = function () { return rd("ms-orders-pk", []); };
+  var payName = function (m) { var r = METHODS.filter(function (x) { return x[0] === m; })[0]; return r ? r[1] : m; };
+  var INP = "w-full bg-surface-container px-space-md py-3 rounded text-on-surface text-body-sm placeholder:text-outline focus:outline-none focus:bg-surface-container-high mt-1";
+  var LBL = "block text-body-sm text-on-surface-variant font-semibold";
+  var BTN = "bg-secondary-container text-on-secondary text-label-lg px-space-md py-2.5 rounded-xl font-bold mt-space-md";
+  function field(id, label, type, ph, ac) { return '<label class="' + LBL + '">' + label + '<input id="f-' + id + '" type="' + type + '" autocomplete="' + ac + '" placeholder="' + ph + '" class="' + INP + '"></label>'; }
+  function renderCheckout() {
+    var root = $("#checkout-body");
+    if (!S.cart.length) { root.innerHTML = '<div class="bg-surface-container rounded-xl p-space-lg text-center"><h2 class="font-headline-sm text-xl">Your cart is empty</h2><button type="button" data-act="go" data-r="shop" class="' + BTN + '">Browse gear</button></div>'; return; }
+    if (!$("#f-name")) {
+      root.innerHTML = '<h1 class="font-headline-md text-headline-md uppercase">Your details</h1>' +
+        '<div class="grid sm:grid-cols-2 gap-space-md">' + field("name", "Name", "text", "Enter your name", "name") + field("phone", "Whatsapp Phone number", "tel", "+92 3XX XXXXXXX", "tel") + field("email", "Email address", "email", "Enter your email address", "email") + field("city", "City", "text", "Enter your city", "address-level2") + '</div>' +
+        '<label class="' + LBL + '">Address<textarea id="f-address" rows="2" autocomplete="street-address" placeholder="House, street, area" class="' + INP + '"></textarea></label>' +
+        '<h2 class="font-headline-sm text-[20px] pt-space-sm">Payment method</h2><div class="flex flex-col gap-space-xs">' + METHODS.map(function (m) {
+          return '<label data-m="' + m[0] + '" class="pay-opt flex items-center gap-space-md p-space-md rounded-lg cursor-pointer transition-colors"><input type="radio" name="pay" value="' + m[0] + '" class="w-4 h-4 accent-secondary-container"><span class="material-symbols-outlined text-tertiary">' + m[2] + '</span><span class="flex flex-col"><span class="font-headline-sm text-[15px]">' + m[1] + '</span><span class="text-on-surface-variant text-[12px]">' + m[3] + '</span></span></label>'; }).join("") + '</div>' +
+        '<div id="pay-note"></div><div id="co-summary" class="bg-surface-container rounded-xl p-space-md flex flex-col gap-space-xs text-body-sm"></div>' +
+        '<p id="co-err" role="alert" class="text-error text-body-sm min-h-[20px]"></p>' +
+        '<button type="button" data-act="place" class="w-full bg-secondary-container text-on-secondary py-4 rounded font-headline-sm text-[18px] uppercase tracking-wider shadow-lg active:scale-[0.98] transition-all">Place order</button>';
+    }
+    var t = totals(S.cart, S.delivery), row = function (a, b, c) { return '<div class="flex justify-between gap-space-sm ' + (c || "") + '"><span class="truncate">' + a + '</span><span class="tabular-nums">' + b + '</span></div>'; };
+    $("#co-summary").innerHTML = S.cart.map(function (l) { return row(P[l.id].cartName + ' × ' + l.qty, money(P[l.id].price * l.qty)); }).join("") +
+      (t.discount ? row("Voucher " + t.code, "-" + money(t.discount), "text-secondary-container") : "") + row("Delivery", money(t.shipping + t.tax), "text-on-surface-variant") +
+      '<div class="flex justify-between font-bold text-[18px] pt-space-xs"><span>Total</span><span class="text-secondary-container tabular-nums">' + money(t.total) + '</span></div>';
+    payUI();
+  }
+  function payUI() {
+    var m = ui.pay, p = PAY[m], t = totals(S.cart, S.delivery), cls = "text-body-sm text-on-surface-variant bg-surface-container-low rounded-lg p-space-md";
+    document.querySelectorAll(".pay-opt").forEach(function (e) { var on = e.dataset.m === m; e.querySelector("input").checked = on; e.classList.toggle("bg-surface-container-high", on); e.classList.toggle("bg-surface-container", !on); });
+    $("#pay-note").innerHTML = p ? '<div class="' + cls + '">Send <b class="text-on-surface">' + money(t.total) + '</b> to ' + p.name + ' number <b class="text-on-surface">' + p.no + '</b>, then enter the transaction ID below.<input id="f-txn" type="text" placeholder="Transaction ID" autocomplete="off" class="' + INP + '"></div>'
+      : '<div class="' + cls + '">' + "Pay in cash when your order arrives." + '</div>';
+  }
+  function renderOrder() {
+    var o = orders().filter(function (x) { return x.id === ui.orderId; })[0], root = $("#order-body");
+    if (!o) { root.innerHTML = '<div class="bg-surface-container rounded-xl p-space-lg text-center"><h2 class="font-headline-sm text-xl">No order to show</h2><button type="button" data-act="go" data-r="shop" class="' + BTN + '">Browse gear</button></div>'; return; }
+    var s = STATUS[o.status] || STATUS.pending, c = o.customer;
+    root.innerHTML = '<div class="bg-surface-container rounded-xl p-space-lg text-center shadow-xl"><div class="w-14 h-14 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center mx-auto mb-space-sm"><span class="material-symbols-outlined text-[32px]">check</span></div><h1 class="font-headline-md text-headline-md uppercase">Order placed</h1><p class="text-on-surface-variant mt-1">Order <b class="text-on-surface">#' + esc(o.id) + '</b> · <b class="' + s[1] + '">' + s[0] + '</b></p><p class="text-body-sm text-on-surface-variant mt-space-sm">We will call or message ' + esc(c.name) + ' on ' + esc(c.phone) + ' to confirm.</p></div>' +
+      '<div class="bg-surface-container rounded-xl p-space-md flex flex-col gap-space-xs text-body-sm">' + o.lines.map(function (l) { return '<div class="flex justify-between gap-space-sm"><span class="truncate">' + esc(l.name) + ' × ' + l.qty + '</span><span class="tabular-nums">' + money(l.price * l.qty) + '</span></div>'; }).join("") + (o.voucher ? '<div class="flex justify-between gap-space-sm text-secondary-container"><span>Voucher ' + esc(o.voucher.code) + '</span><span class="tabular-nums">-' + money(o.voucher.discount) + '</span></div>' : '') + '<div class="h-px bg-surface-variant my-space-xs"></div><div class="flex justify-between font-bold text-[18px]"><span>Total</span><span class="text-secondary-container tabular-nums">' + money(o.totals.total) + '</span></div></div>' +
+      '<div class="bg-surface-container rounded-xl p-space-md text-body-sm text-on-surface-variant"><p>Deliver to: <span class="text-on-surface">' + esc(c.address) + ', ' + esc(c.city) + '</span></p><p class="mt-1">Payment: <span class="text-on-surface">' + esc(payName(o.pay.method)) + (o.pay.txn ? ' · ID ' + esc(o.pay.txn) : '') + '</span></p></div>' +
+      '<button type="button" data-act="go" data-r="shop" class="w-full bg-secondary-container text-on-secondary py-3 rounded-xl font-bold">Keep shopping</button>';
+  }
+
+  /* ---------- Render ---------- */
+  var RENDER = { home: renderHome, shop: renderShop, cart: renderCart, checkout: renderCheckout, order: renderOrder, product: renderProduct };
+  /* ---------- Product page: opens when a product card is tapped ---------- */
+  function renderProduct() {
+    var p = P[ui.productId], root = $("#product-body"), bar = $("#product-bar");
+    if (!p) { root.innerHTML = '<div class="bg-surface-container rounded-xl p-space-lg text-center"><h2 class="font-headline-sm text-xl">Product not found</h2><button type="button" data-act="go" data-r="shop" class="' + BTN + '">Browse gear</button></div>'; return; }
+    var cat = (CATS.filter(function (c) { return c[0] === p.cat; })[0] || [0, p.sub])[1], box = "bg-surface-container rounded-xl p-space-md";
+    var det = [["Category", cat]]; if (p.sub && p.sub !== cat) det.push(["Type", p.sub]);
+    (p.meta || []).forEach(function (m) { if (m[0] !== "Category") det.push(m); });
+    var rel = CATALOG.filter(function (x) { return x.cat === p.cat && x.id !== p.id; }).slice(0, 4);
+    var info = function (icon, html) { return '<div class="flex gap-space-sm"><span class="material-symbols-outlined text-tertiary">' + icon + '</span><span>' + html + '</span></div>'; };
+    root.innerHTML =
+      '<div class="relative w-full aspect-square sm:aspect-[16/10] bg-surface-container-lowest rounded-xl overflow-hidden shadow-md"><span class="absolute top-3 left-3 z-10 ' + TONE[p.tone] + ' text-[11px] font-bold uppercase px-2.5 py-1 rounded tracking-wider">' + p.tag + '</span><div class="absolute inset-0 p-space-lg">' + pic(p) + '</div></div>' +
+      '<div class="' + box + '"><span class="text-outline text-[12px] uppercase tracking-wider">' + cat + '</span><h1 class="font-headline-md text-headline-md text-on-surface leading-snug mt-1">' + p.name + '</h1>' +
+        (p.reviews ? '<div class="flex items-center gap-1 mt-1"><span class="material-symbols-outlined text-secondary-container text-[16px]" style="font-variation-settings:\'FILL\' 1">star</span><span class="text-label-md text-on-surface">' + p.rating.toFixed(1) + '</span><span class="text-outline text-[12px]">(' + p.reviews + ' reviews)</span></div>' : '') +
+        '<div class="font-headline-md text-headline-md text-secondary-container tabular-nums mt-space-sm">' + money(p.price) + '</div>' +
+        (p.noVoucher ? '<p class="text-body-sm text-on-surface-variant mt-1">Voucher codes do not apply to this item.</p>' : '') + '</div>' +
+      '<div class="' + box + ' flex flex-col gap-space-sm text-body-sm text-on-surface-variant">' +
+        info("local_shipping", '<b class="text-on-surface">Delivery:</b> Standard ' + money(STANDARD) + ' (free over ' + money(FREE_AT) + '), Express ' + money(EXPRESS) + '.') +
+        info("payments", '<b class="text-on-surface">Pay with:</b> ' + METHODS.map(function (m) { return m[1]; }).join(", ") + '.') +
+        info("published_with_changes", 'Easy exchange and return policy.') + '</div>' +
+      '<div class="' + box + '"><h2 class="font-headline-sm text-[18px] mb-space-xs">Details</h2>' + det.map(function (m) { return '<div class="flex justify-between gap-space-md py-2.5 border-b border-surface-variant last:border-b-0 text-body-sm"><span class="text-on-surface-variant">' + m[0] + '</span><span class="text-on-surface font-semibold text-right">' + m[1] + '</span></div>'; }).join("") + '</div>' +
+      (p.desc ? '<div class="' + box + '"><h2 class="font-headline-sm text-[18px] mb-space-xs">Description</h2><p class="text-body-sm text-on-surface-variant whitespace-pre-line leading-relaxed">' + esc(p.desc) + '</p></div>' : '') +
+      (rel.length ? '<h2 class="font-headline-sm text-[18px] mt-space-sm">You may also like</h2><div class="grid grid-cols-2 gap-space-sm">' + rel.map(card).join("") + '</div>' : '');
+    var bt = "flex-1 py-3.5 rounded-xl font-bold uppercase tracking-wider text-label-lg active:scale-95 transition-all";
+    bar.innerHTML = '<button type="button" data-act="add" data-id="' + p.id + '" class="' + bt + ' bg-surface-container-high text-on-surface">Add to cart</button><button type="button" data-act="buy" data-id="' + p.id + '" class="' + bt + ' bg-secondary-container text-on-secondary">Buy now</button>';
+    bar.hidden = false;
+  }
+  function render() {
+    var r = route();
+    var changed = cur !== r;
+    if (changed) { if (cur) prev = cur; cur = r; }
+    ["home", "shop", "cart", "checkout", "order", "product"].forEach(function (v) { $("#view-" + v).hidden = v !== r; });
+    $("#product-bar").hidden = true;
+    RENDER[r]();
+    chrome(r);
+    if (changed) { window.scrollTo(0, 0); var v = $("#view-" + r); v.classList.remove("view-enter"); void v.offsetWidth; v.classList.add("view-enter"); }
+  }
+  function refresh() { save(); RENDER[cur](); chrome(cur); }
+  window.addEventListener("hashchange", render);
+
+  /* ---------- Actions ---------- */
+  function addToCart(id, n) {
+    var l = S.cart.filter(function (x) { return x.id === id; })[0];
+    if (l) l.qty = Math.min(99, l.qty + n); else S.cart.push({ id: id, qty: n });
+  }
+  document.addEventListener("keydown", function (e) { var t = e.target; if (e.key === "Enter" && t && t.dataset && t.dataset.act === "open") t.click(); });
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-act]"); if (!t) return;
+    var a = t.dataset.act, id = t.dataset.id;
+    switch (a) {
+      case "go": go(t.dataset.r); break;
+      case "open": go("product-" + id); window.scrollTo(0, 0); break;
+      case "buy": addToCart(id, 1); save(); go("cart"); break;
+      case "back": go(cur === "order" ? "shop" : prev && prev !== cur ? prev : "home"); break;
+      case "explore": { var f = $("#featured"); if (f) f.scrollIntoView({ behavior: "smooth", block: "start" }); break; }
+      case "all-gear": ui.cat = "all"; ui.q = ""; break;
+      case "cat": ui.cat = t.dataset.cat; ui.q = ""; if (cur === "shop") renderShop(); else go("shop"); break;
+      case "clear-search": ui.q = ""; renderShop(); $("#product-search").focus(); break;
+      case "reset-filters": ui.cat = "all"; ui.q = ""; renderShop(); break;
+      case "add": addToCart(id, 1); refresh(); toast(P[id].name + " added to cart"); { var b = $("#bag-count"); b.classList.add("scale-125"); setTimeout(function () { b.classList.remove("scale-125"); }, 200); } break;
+      case "qty": { var l = S.cart.filter(function (x) { return x.id === id; })[0]; if (l) { l.qty = Math.max(1, Math.min(99, l.qty + Number(t.dataset.d))); refresh(); } break; }
+      case "remove": { var el = t.closest(".cart-line"); if (el) { el.style.opacity = "0"; el.style.transform = "translateX(20px)"; } setTimeout(function () { S.cart = S.cart.filter(function (x) { return x.id !== id; }); refresh(); }, 180); break; }
+      case "clear-cart": if (S.cart.length) { S.cart = []; refresh(); toast("Cart cleared"); } break;
+      case "apply-promo": {
+        var pc = ($("#promo-input").value || "").trim().toUpperCase(), fr = findVoucher(pc);
+        if (!pc) ui.promoMsg = "Enter a voucher code.";
+        else if (fr.state === "none") ui.promoMsg = "That voucher code is not valid.";
+        else if (fr.state === "expired") ui.promoMsg = "This voucher has expired.";
+        else if (S.cart.length && !S.cart.some(function (l) { return okFor(P[l.id], fr.v); })) ui.promoMsg = onlyOn(fr.v);
+        else { S.promo = pc; ui.promoMsg = ""; save(); }
+        refresh(); break;
+      }
+      case "remove-promo": S.promo = null; ui.promoMsg = ""; $("#promo-input").value = ""; save(); refresh(); break;
+      case "checkout": if (S.cart.length) go("checkout"); break;
+      case "place": {
+        var fv = function (i) { var e = $("#f-" + i); return e ? e.value.trim() : ""; };
+        var cu = { name: fv("name"), phone: fv("phone").replace(/[\s-]/g, ""), email: fv("email"), city: fv("city"), address: fv("address") };
+        var er = !cu.name ? "Enter your name." : !/^(\+?92|0)3\d{9}$/.test(cu.phone) ? "Enter a valid mobile number, like 03XX XXXXXXX." : !/^\S+@\S+\.\S+$/.test(cu.email) ? "Enter a valid email address." : !cu.address ? "Enter your address." : !cu.city ? "Enter your city." : (ui.pay === "easypaisa" || ui.pay === "jazzcash") && !fv("txn") ? "Enter the transaction ID from your payment." : "";
+        $("#co-err").textContent = er; if (er) break;
+        if (S.promo && findVoucher(S.promo).state !== "ok") { promoCheck(); $("#co-err").textContent = "Your voucher has expired. Please check your cart."; go("cart"); break; }
+        var tt = totals(S.cart, S.delivery);
+        var od = { id: "MS-" + Date.now().toString(36).toUpperCase().slice(-6), placedAt: new Date().toISOString(), status: "pending", customer: cu, pay: { method: ui.pay, txn: fv("txn") }, delivery: S.delivery, totals: tt, voucher: tt.discount ? { code: tt.code, discount: tt.discount } : null,
+          lines: S.cart.map(function (l) { var p = P[l.id]; return { id: p.id, name: p.cartName, price: p.price, qty: l.qty }; }) };
+        var all = orders(); all.unshift(od); wr("ms-orders-pk", all); if (window.msMail) msMail(od, "placed");
+        S.cart = []; S.promo = null; ui.promoMsg = ""; ui.orderId = od.id; save(); $("#checkout-body").innerHTML = ""; go("order"); break;
+      }
+      case "soon": toast(t.dataset.msg || "That part is not available yet."); break;
+    }
+  });
+  document.addEventListener("change", function (e) {
+    var el = e.target;
+    if (el.name === "delivery") { S.delivery = el.value; refresh(); }
+    if (el.name === "pay") { ui.pay = el.value; payUI(); }
+  });
+  $("#product-search").addEventListener("input", function (e) { ui.q = e.target.value; renderShop(); });
+
+  window.addEventListener("storage", function (e) {
+    if (e.key === "ms-products-pk") location.reload();
+    else if (e.key === "ms-orders-pk" && cur === "order") renderOrder();
+    else if (e.key === "ms-vouchers-pk" && cur === "cart") refresh();
+  });
+  render();
+})();
+</script>
+
+</body>
+</html>
