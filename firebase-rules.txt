@@ -1,0 +1,23 @@
+{
+  "rules": {
+    "products": { ".read": true, ".write": "auth != null" },
+    "vouchers": { ".read": true, ".write": "auth != null" },
+    "orders": {
+      ".read": "auth != null",
+      "$id": {
+        ".write": "auth != null || !data.exists()",
+        ".validate": "newData.isString() && newData.val().length < 6000"
+      }
+    },
+    "track": {
+      "$id": {
+        ".read": true,
+        ".write": "auth != null || !data.exists()",
+        ".validate": "newData.hasChildren(['s','h','t'])",
+        "s": { ".validate": "newData.isString() && newData.val().length < 20" },
+        "h": { ".validate": "newData.isString() && newData.val().length < 30" },
+        "t": { ".validate": "newData.isString() && newData.val().length < 40" }
+      }
+    }
+  }
+}

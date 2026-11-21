@@ -3,7 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Malik Sports</title>
+<title>Malik Sports | Cricket Bats, Balls, Footballs &amp; Sports Gear in Pakistan</title>
+<meta name="description" content="Buy cricket bats, leather balls, footballs, gloves, helmets, footwear and sports accessories online from Malik Sports. Cash on Delivery, Easypaisa and JazzCash across Pakistan.">
+<meta name="robots" content="index, follow">
+<meta name="google-site-verification" content="EaRiz4KxPgF6e4nRpjI_BhuJmLK6gDG1a_4UWQ__juA" />
+<meta property="og:type" content="website">
+<meta property="og:title" content="Malik Sports | Sports Gear in Pakistan">
+<meta property="og:description" content="Cricket bats, balls, footballs, gloves, helmets and more. Cash on Delivery across Pakistan.">
+<meta property="og:site_name" content="Malik Sports">
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Malik Sports">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&display=swap">
@@ -111,13 +123,21 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
 /* ============ Do not edit below this line ============ */
 (function () {
   var DB = String(window.MS_DB || "").replace(/\/+$/, "");
+  /* Small fingerprint used to check order number + phone when a customer tracks an order. */
+  window.msHash = function (s) { var a = 0xdeadbeef, b = 0x41c6ce57; for (var i = 0, c; i < s.length; i++) { c = s.charCodeAt(i); a = Math.imul(a ^ c, 2654435761); b = Math.imul(b ^ c, 1597334677); } a = Math.imul(a ^ (a >>> 16), 2246822507) ^ Math.imul(b ^ (b >>> 13), 3266489909); b = Math.imul(b ^ (b >>> 16), 2246822507) ^ Math.imul(a ^ (a >>> 13), 3266489909); return (4294967296 * (2097151 & b) + (a >>> 0)).toString(36); };
+  window.msTrackKey = function (id, phone) { return window.msHash(id + "|" + String(phone || "").replace(/\D/g, "").slice(-10)); };
   if (DB.indexOf("https://") !== 0) return;
   var raw = Storage.prototype.setItem;
   function pend() { try { return JSON.parse(localStorage.getItem("ms-pending-pk") || "[]"); } catch (e) { return []; } }
+  function done(r) { return r.ok || r.status === 401; }
   function flush() {
     pend().forEach(function (o) {
-      fetch(DB + "/orders/" + o.id + ".json", { method: "PUT", body: JSON.stringify(JSON.stringify(o)) }).then(function (r) {
-        if (r.ok || r.status === 401) raw.call(localStorage, "ms-pending-pk", JSON.stringify(pend().filter(function (x) { return x.id !== o.id; })));
+      var tr = { s: o.status || "pending", h: window.msTrackKey(o.id, o.customer && o.customer.phone), t: String(o.placedAt || "") };
+      Promise.all([
+        fetch(DB + "/orders/" + o.id + ".json", { method: "PUT", body: JSON.stringify(JSON.stringify(o)) }),
+        fetch(DB + "/track/" + o.id + ".json", { method: "PUT", body: JSON.stringify(tr) })
+      ]).then(function (r) {
+        if (done(r[0]) && done(r[1])) raw.call(localStorage, "ms-pending-pk", JSON.stringify(pend().filter(function (x) { return x.id !== o.id; })));
       }, function () {});
     });
   }
@@ -161,6 +181,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     <nav class="hidden md:flex items-center gap-1" aria-label="Main">
       <a href="#home" data-tab="home" class="px-4 py-2 rounded-xl font-label-lg text-label-lg uppercase tracking-wider transition-colors">Home</a>
       <a href="#shop" data-tab="shop" class="px-4 py-2 rounded-xl font-label-lg text-label-lg uppercase tracking-wider transition-colors">Shop</a>
+      <a href="#track" data-tab="track" class="px-4 py-2 rounded-xl font-label-lg text-label-lg uppercase tracking-wider transition-colors">Track</a>
       <a href="#cart" data-tab="cart" class="px-4 py-2 rounded-xl font-label-lg text-label-lg uppercase tracking-wider transition-colors">Cart</a>
     </nav>
     <div class="flex items-center gap-space-sm shrink-0">
@@ -193,12 +214,14 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
           </div>
         </div>
       </div>
+      <div id="trust" class="grid grid-cols-2 md:grid-cols-4 gap-space-sm mb-space-lg"></div>
       <div id="home-pills" class="w-full overflow-x-auto no-scrollbar mb-space-lg"></div>
       <div id="featured" class="flex items-center justify-between mb-space-md scroll-mt-20">
         <h2 class="font-headline-sm text-headline-sm uppercase text-on-surface">Latest Gear</h2>
         <a href="#shop" data-act="all-gear" class="text-label-md text-secondary-container uppercase tracking-wider font-bold">View All</a>
       </div>
       <div id="home-grid" class="grid grid-cols-2 md:grid-cols-4 gap-space-md w-full"></div>
+      <footer id="site-footer" class="mt-space-xl pt-space-lg pb-space-md border-t border-surface-variant"></footer>
     </section>
 
     <!-- SHOP -->
@@ -214,10 +237,14 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
             <span class="text-label-md text-on-surface">Pro Series</span>
           </div>
         </div>
-        <div class="relative w-full md:max-w-xl">
+        <div class="flex flex-col sm:flex-row gap-space-sm w-full md:max-w-2xl">
+        <div class="relative w-full">
           <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
           <input id="product-search" type="text" autocomplete="off" placeholder="Search bats, balls, footwear, gear..." aria-label="Search gear" class="w-full bg-surface-container text-on-surface placeholder:text-outline text-body-md pl-12 pr-10 py-3 rounded-xl focus:outline-none focus:ring-1 focus:ring-tertiary transition-all">
           <button id="clear-search" type="button" data-act="clear-search" hidden aria-label="Clear search" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface"><span class="material-symbols-outlined text-[18px]">close</span></button>
+        </div>
+        <label class="sr-only" for="sort-by">Sort products</label>
+        <select id="sort-by" class="bg-surface-container text-on-surface text-body-md px-4 py-3 rounded-xl focus:outline-none focus:ring-1 focus:ring-tertiary sm:w-56 shrink-0"><option value="featured">Sort: Newest</option><option value="low">Price: Low to high</option><option value="high">Price: High to low</option><option value="rated">Top rated</option><option value="az">Name: A to Z</option></select>
         </div>
         <div id="shop-pills" class="flex gap-space-sm overflow-x-auto no-scrollbar pb-2 md:flex-wrap md:overflow-visible"></div>
       </div>
@@ -321,6 +348,9 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
       </div>
     </section>
 
+    <!-- TRACK -->
+    <section id="view-track" hidden class="w-full pt-space-md"><div id="track-body" class="max-w-2xl mx-auto flex flex-col gap-space-md"></div></section>
+
     <!-- ORDER -->
     <section id="view-order" hidden class="w-full pt-space-sm"><div id="order-body" class="max-w-2xl mx-auto flex flex-col space-y-5"></div></section>
 
@@ -333,12 +363,15 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
   </div>
 </main>
 
+<a id="wa-float" href="#" target="_blank" rel="noopener" aria-label="Chat with Malik Sports on WhatsApp" class="fixed right-4 bottom-24 md:bottom-8 z-40 flex items-center gap-2 bg-secondary-container text-on-secondary pl-3 pr-4 py-2.5 rounded-full shadow-2xl active:scale-95 transition-transform"><span class="relative flex w-8 h-8 rounded-full bg-[#25D366] items-center justify-center"><span class="material-symbols-outlined text-[18px] text-white" style="font-variation-settings:'FILL' 1">chat</span></span><span class="font-label-lg text-label-lg uppercase tracking-wider">WhatsApp</span></a>
+
 <div id="product-bar" hidden class="fixed bottom-0 inset-x-0 z-50 flex gap-space-sm px-space-md pt-space-sm bg-surface/95 backdrop-blur-xl border-t border-surface-variant" style="padding-bottom:max(12px,env(safe-area-inset-bottom))"></div>
 
 <nav id="bottom-nav" aria-label="Main" class="fixed bottom-0 inset-x-0 z-50 md:hidden bg-surface/90 backdrop-blur-xl" style="padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))">
   <div class="flex justify-around items-center h-20">
     <a href="#home" data-tab="home" class="flex flex-col items-center justify-center gap-space-xs w-16 h-16 transition-all rounded-xl"><span class="material-symbols-outlined">home</span><span class="text-label-md">Home</span></a>
     <a href="#shop" data-tab="shop" class="flex flex-col items-center justify-center gap-space-xs w-16 h-16 transition-all rounded-xl"><span class="material-symbols-outlined">storefront</span><span class="text-label-md">Shop</span></a>
+    <a href="#track" data-tab="track" class="flex flex-col items-center justify-center gap-space-xs w-16 h-16 transition-all rounded-xl"><span class="material-symbols-outlined">local_shipping</span><span class="text-label-md">Track</span></a>
     <a href="#cart" data-tab="cart" class="flex flex-col items-center justify-center gap-space-xs w-16 h-16 transition-all rounded-xl"><span class="material-symbols-outlined">shopping_cart</span><span class="text-label-md">Cart</span></a>
   </div>
 </nav>
@@ -474,7 +507,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
   var S = load();
   S.cart = (S.cart || []).filter(function (l) { return P[l.id]; });
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
-  var ui = { cat: "all", q: "", orderId: null, pay: "cod", promoMsg: "", productId: null };
+  var ui = { cat: "all", q: "", orderId: null, pay: "cod", promoMsg: "", productId: null, sort: "featured", trackId: "", trackPhone: "" };
 
   /* ---------- Toast ---------- */
   var tt;
@@ -488,6 +521,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
   /* ---------- Routing ---------- */
   var ROUTES = {
     home: { title: "Home", tab: "home" }, shop: { title: "Shop", tab: "shop" }, cart: { title: "Cart", tab: "cart" },
+    track: { title: "Track order", tab: "track" },
     checkout: { title: "Checkout", tab: "cart", stack: true }, order: { title: "Order placed", tab: "shop", stack: true }, product: { title: "Product", tab: "shop", stack: true }
   };
   var cur = null, prev = null;
@@ -517,6 +551,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     });
     var n = units(S.cart), b = $("#bag-count");
     b.textContent = n; b.hidden = n === 0;
+    var w = $("#wa-float"); if (w) { w.hidden = r === "checkout" || r === "product" || r === "order"; w.href = waLink("Hi Malik Sports, I need some help."); }
   }
 
   /* ---------- Shared pieces ---------- */
@@ -546,6 +581,15 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     if (!$("#hero-art").firstChild) {
       $("#hero-art").innerHTML = '<div class="flex items-end"><div class="w-3/5">' + art("bat") + '</div><div class="w-2/5 -ml-6">' + art("football") + '</div></div>';
     }
+    $("#trust").innerHTML = [["local_shipping", "Free delivery", "On orders over " + money(FREE_AT)], ["payments", "Cash on delivery", "Pay when it arrives"], ["published_with_changes", "Easy exchange", "30-day guarantee"], ["support_agent", "WhatsApp support", "Quick replies"]].map(function (x) {
+      return '<div class="flex items-center gap-space-sm bg-surface-container rounded-xl p-space-sm md:p-space-md"><span class="material-symbols-outlined text-tertiary text-[26px]">' + x[0] + '</span><span class="flex flex-col leading-tight"><span class="text-label-lg uppercase tracking-wider font-bold text-on-surface">' + x[1] + '</span><span class="text-[12px] text-on-surface-variant">' + x[2] + '</span></span></div>';
+    }).join("");
+    var lk = "text-body-sm text-on-surface-variant hover:text-on-surface transition-colors";
+    $("#site-footer").innerHTML = '<div class="grid md:grid-cols-3 gap-space-lg">' +
+      '<div><div class="font-headline-md text-[28px] uppercase tracking-wide leading-none">Malik Sports</div><p class="text-body-sm text-on-surface-variant mt-space-sm max-w-xs">Cricket, football and sports gear, delivered across Pakistan.</p></div>' +
+      '<div class="flex flex-col gap-space-xs"><span class="text-label-lg uppercase tracking-wider font-bold">Shop</span><a href="#shop" class="' + lk + '">All gear</a><a href="#track" class="' + lk + '">Track your order</a><a href="#cart" class="' + lk + '">Your cart</a></div>' +
+      '<div class="flex flex-col gap-space-xs"><span class="text-label-lg uppercase tracking-wider font-bold">Help</span><a href="' + waLink("Hi Malik Sports, I need some help.") + '" target="_blank" rel="noopener" class="' + lk + '">Chat on WhatsApp</a><span class="' + lk + '">Pay by Cash on Delivery, Easypaisa or JazzCash</span></div></div>' +
+      '<p class="text-[12px] text-outline mt-space-lg">© ' + new Date().getFullYear() + ' Malik Sports. All rights reserved.</p>';
     $("#home-pills").innerHTML = '<div class="flex items-center gap-space-sm w-max">' + pills("none", "home") + '</div>';
     $("#home-grid").innerHTML = FEATURED.map(function (id) { return card(P[id]); }).join("");
   }
@@ -557,6 +601,9 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     var list = CATALOG.filter(function (p) {
       return (ui.cat === "all" || p.cat === ui.cat) && (!q || (p.name + " " + p.sub + " " + p.cat + " " + p.keys).toLowerCase().indexOf(q) > -1);
     });
+    var SORT = { low: function (a, b) { return a.price - b.price; }, high: function (a, b) { return b.price - a.price; }, rated: function (a, b) { return b.rating - a.rating || b.reviews - a.reviews; }, az: function (a, b) { return String(a.name).localeCompare(String(b.name)); } };
+    if (SORT[ui.sort]) list = list.slice().sort(SORT[ui.sort]);
+    var sb = $("#sort-by"); if (sb.value !== ui.sort) sb.value = ui.sort;
     $("#results-count").textContent = "Showing " + list.length + " high-performance item" + (list.length === 1 ? "" : "s");
     $("#shop-grid").innerHTML = list.map(card).join("");
     $("#shop-grid").hidden = list.length === 0;
@@ -657,15 +704,92 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
   function renderOrder() {
     var o = orders().filter(function (x) { return x.id === ui.orderId; })[0], root = $("#order-body");
     if (!o) { root.innerHTML = '<div class="bg-surface-container rounded-xl p-space-lg text-center"><h2 class="font-headline-sm text-xl">No order to show</h2><button type="button" data-act="go" data-r="shop" class="' + BTN + '">Browse gear</button></div>'; return; }
-    var s = STATUS[o.status] || STATUS.pending, c = o.customer;
-    root.innerHTML = '<div class="bg-surface-container rounded-xl p-space-lg text-center shadow-xl"><div class="w-14 h-14 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center mx-auto mb-space-sm"><span class="material-symbols-outlined text-[32px]">check</span></div><h1 class="font-headline-md text-headline-md uppercase">Order placed</h1><p class="text-on-surface-variant mt-1">Order <b class="text-on-surface">#' + esc(o.id) + '</b> · <b class="' + s[1] + '">' + s[0] + '</b></p><p class="text-body-sm text-on-surface-variant mt-space-sm">We will call or message ' + esc(c.name) + ' on ' + esc(c.phone) + ' to confirm.</p></div>' +
+    var s = STATUS[live()[o.id] || o.status] || STATUS.pending, c = o.customer;
+    root.innerHTML = '<div class="bg-surface-container rounded-xl p-space-lg text-center shadow-xl"><div class="w-14 h-14 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center mx-auto mb-space-sm"><span class="material-symbols-outlined text-[32px]">check</span></div><h1 class="font-headline-md text-headline-md uppercase">Order placed</h1><p class="text-on-surface-variant mt-1">Order <b class="text-on-surface">#' + esc(o.id) + '</b> · <b id="live-s" class="' + s[1] + '">' + s[0] + '</b></p><p class="text-body-sm text-on-surface-variant mt-space-sm">We will call or message ' + esc(c.name) + ' on ' + esc(c.phone) + ' to confirm.</p></div>' +
       '<div class="bg-surface-container rounded-xl p-space-md flex flex-col gap-space-xs text-body-sm">' + o.lines.map(function (l) { return '<div class="flex justify-between gap-space-sm"><span class="truncate">' + esc(l.name) + ' × ' + l.qty + '</span><span class="tabular-nums">' + money(l.price * l.qty) + '</span></div>'; }).join("") + (o.voucher ? '<div class="flex justify-between gap-space-sm text-secondary-container"><span>Voucher ' + esc(o.voucher.code) + '</span><span class="tabular-nums">-' + money(o.voucher.discount) + '</span></div>' : '') + '<div class="h-px bg-surface-variant my-space-xs"></div><div class="flex justify-between font-bold text-[18px]"><span>Total</span><span class="text-secondary-container tabular-nums">' + money(o.totals.total) + '</span></div></div>' +
       '<div class="bg-surface-container rounded-xl p-space-md text-body-sm text-on-surface-variant"><p>Deliver to: <span class="text-on-surface">' + esc(c.address) + ', ' + esc(c.city) + '</span></p><p class="mt-1">Payment: <span class="text-on-surface">' + esc(payName(o.pay.method)) + (o.pay.txn ? ' · ID ' + esc(o.pay.txn) : '') + '</span></p></div>' +
-      '<button type="button" data-act="go" data-r="shop" class="w-full bg-secondary-container text-on-secondary py-3 rounded-xl font-bold">Keep shopping</button>';
+      '<div class="grid sm:grid-cols-2 gap-space-sm"><button type="button" data-act="track-order" class="w-full bg-secondary-container text-on-secondary py-3 rounded-xl font-bold flex items-center justify-center gap-space-xs"><span class="material-symbols-outlined text-[20px]">local_shipping</span>Track this order</button>' +
+      '<a href="' + waLink("Hi Malik Sports, my order is #" + o.id + " (" + money(o.totals.total) + ").") + '" target="_blank" rel="noopener" class="w-full bg-surface-container-high text-on-surface py-3 rounded-xl font-bold flex items-center justify-center gap-space-xs"><span class="material-symbols-outlined text-[20px]">chat</span>Message us on WhatsApp</a></div>' +
+      '<button type="button" data-act="go" data-r="shop" class="w-full bg-surface-container text-on-surface py-3 rounded-xl font-bold">Keep shopping</button>';
+    liveOrder(o);
+  }
+
+  /* ---------- WhatsApp ---------- */
+  /* OWNER: this is the number customers message on WhatsApp. Use country code, digits only (92 then the number without the first 0). */
+  var WA = "923330666674";
+  function waLink(text) { return "https://wa.me/" + WA + "?text=" + encodeURIComponent(text); }
+
+  /* ---------- Track order ---------- */
+  var DB = String(window.MS_DB || "").replace(/\/+$/, ""), LIVE = DB.indexOf("https://") === 0;
+  var STEPS = [["pending", "Order placed", "receipt_long", "We have your order and will confirm it soon."], ["confirmed", "Confirmed", "verified", "Your gear is being packed."], ["dispatched", "On the way", "local_shipping", "Your parcel is with the courier."], ["delivered", "Delivered", "inventory_2", "Enjoy your gear!"]];
+  var live = function () { return rd("ms-live-pk", {}); };
+  function fetchTrack(id, phone) {
+    id = String(id || "").trim().toUpperCase().replace(/^#/, "");
+    if (!LIVE) return Promise.resolve({ ok: false, why: "off" });
+    if (!/^MS-[A-Z0-9]{3,10}$/.test(id)) return Promise.resolve({ ok: false, why: "none" });
+    return fetch(DB + "/track/" + id + ".json").then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function (j) {
+      if (!j || !j.h || j.h !== window.msTrackKey(id, phone)) return { ok: false, why: "none" };
+      var m = live(); m[id] = j.s; wr("ms-live-pk", m);
+      return { ok: true, id: id, s: j.s, t: j.t };
+    }).catch(function () { return { ok: false, why: "net" }; });
+  }
+  function liveOrder(o) {
+    fetchTrack(o.id, o.customer && o.customer.phone).then(function (r) {
+      var el = $("#live-s"); if (!r.ok || cur !== "order" || !el) return;
+      var st = STATUS[r.s] || STATUS.pending; el.textContent = st[0]; el.className = st[1];
+    });
+  }
+  function stepper(s) {
+    if (s === "cancelled") return '<div class="flex items-center gap-space-sm text-error"><span class="material-symbols-outlined">cancel</span><b>This order was cancelled. If you did not expect this, please contact us.</b></div>';
+    var at = 0; STEPS.forEach(function (x, i) { if (x[0] === s) at = i; });
+    return '<ol>' + STEPS.map(function (st, i) {
+      var done = i <= at, now = i === at;
+      return '<li class="flex gap-space-md"><div class="flex flex-col items-center"><span class="w-9 h-9 rounded-full flex items-center justify-center ' + (done ? "bg-secondary-container text-on-secondary" : "bg-surface-container-high text-outline") + (now ? " ring-4 ring-surface-variant" : "") + '"><span class="material-symbols-outlined text-[18px]">' + st[2] + '</span></span>' +
+        (i < STEPS.length - 1 ? '<span class="w-0.5 flex-1 min-h-[28px] ' + (i < at ? "bg-secondary-container" : "bg-surface-variant") + '"></span>' : "") + '</div>' +
+        '<div class="pb-space-md pt-1.5"><div class="font-headline-sm text-[16px] ' + (done ? "text-on-surface" : "text-outline") + '">' + st[1] + '</div>' + (now ? '<div class="text-[13px] text-on-surface-variant">' + st[3] + '</div>' : "") + '</div></li>';
+    }).join("") + '</ol>';
+  }
+  function doTrack() {
+    var id = ($("#t-id").value || "").trim().toUpperCase().replace(/^#/, ""), ph = $("#t-phone").value, out = $("#track-result");
+    if (!id || !ph.trim()) { out.innerHTML = '<p class="text-error text-body-sm">Enter your order number and phone number.</p>'; return; }
+    out.innerHTML = '<p class="text-on-surface-variant text-body-sm">Checking your order…</p>';
+    fetchTrack(id, ph).then(function (r) {
+      if (!r.ok) {
+        var msg = r.why === "net" ? "Could not reach the shop right now. Check your internet and try again." : r.why === "off" ? "Order tracking is not available right now. Please message us on WhatsApp." : "We could not find an order with that number and phone. Check both and try again.";
+        out.innerHTML = '<div class="bg-surface-container rounded-xl p-space-md text-error text-body-sm">' + msg + '</div>'; return;
+      }
+      var st = STATUS[r.s] || STATUS.pending, when = r.t ? new Date(r.t).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";
+      out.innerHTML = '<div class="bg-surface-container rounded-xl p-space-md shadow-md"><div class="flex items-center justify-between gap-space-sm mb-space-md"><div><span class="font-headline-md text-[24px] tracking-wide">#' + esc(r.id) + '</span>' + (when ? '<div class="text-[12px] text-on-surface-variant">Placed ' + when + '</div>' : "") + '</div><b class="' + st[1] + ' text-label-lg uppercase tracking-wider text-right">' + st[0] + '</b></div>' + stepper(r.s) +
+        '<a href="' + waLink("Hi Malik Sports, about my order #" + r.id) + '" target="_blank" rel="noopener" class="mt-space-sm flex items-center justify-center gap-space-xs w-full bg-surface-container-high text-on-surface py-3 rounded-xl font-bold"><span class="material-symbols-outlined text-[20px]">chat</span>Need help? WhatsApp us</a></div>';
+    });
+  }
+  function renderTrack() {
+    var root = $("#track-body");
+    if (!$("#t-id")) {
+      root.innerHTML = '<div><h1 class="font-headline-md text-headline-md uppercase">Track your order</h1><p class="text-body-sm text-on-surface-variant mt-1">Enter the order number from your order page or email, and the phone number you ordered with.</p></div>' +
+        '<div class="bg-surface-container rounded-xl p-space-md flex flex-col gap-space-sm shadow-md"><label class="' + LBL + '">Order number<input id="t-id" type="text" autocomplete="off" autocapitalize="characters" placeholder="MS-XXXXXX" class="' + INP + ' uppercase placeholder:normal-case"></label>' +
+        '<label class="' + LBL + '">Phone number<input id="t-phone" type="tel" autocomplete="tel" placeholder="03XX XXXXXXX" class="' + INP + '"></label>' +
+        '<button type="button" data-act="track-go" class="' + BTN + ' w-full flex items-center justify-center gap-space-xs"><span class="material-symbols-outlined text-[20px]">search</span>Track order</button></div>' +
+        '<div id="track-result" role="status" aria-live="polite"></div><div id="track-recent"></div>';
+    }
+    var go1 = !!ui.trackId;
+    if (go1) { $("#t-id").value = ui.trackId; $("#t-phone").value = ui.trackPhone || ""; ui.trackId = ""; ui.trackPhone = ""; doTrack(); }
+    var mine = orders().slice(0, 5), box = $("#track-recent");
+    if (!mine.length) { box.innerHTML = ""; return; }
+    box.innerHTML = '<h2 class="font-headline-sm text-[18px] mb-space-sm">Your recent orders</h2><div class="flex flex-col gap-space-xs">' + mine.map(function (o, i) {
+      var st = STATUS[live()[o.id] || o.status] || STATUS.pending, d = new Date(o.placedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+      return '<button type="button" data-act="track-recent" data-i="' + i + '" class="w-full text-left bg-surface-container rounded-xl p-space-md flex items-center justify-between gap-space-md hover:bg-surface-container-high transition-colors"><span><b>#' + esc(o.id) + '</b><span class="block text-[12px] text-on-surface-variant">' + d + ' · ' + money(o.totals.total) + '</span></span><span data-live="' + esc(o.id) + '" class="text-label-md font-bold ' + st[1] + '">' + st[0] + '</span></button>';
+    }).join("") + '</div>';
+    mine.forEach(function (o) {
+      fetchTrack(o.id, o.customer && o.customer.phone).then(function (r) {
+        var el = document.querySelector('[data-live="' + o.id + '"]'); if (!r.ok || !el) return;
+        var st = STATUS[r.s] || STATUS.pending; el.textContent = st[0]; el.className = "text-label-md font-bold " + st[1];
+      });
+    });
   }
 
   /* ---------- Render ---------- */
-  var RENDER = { home: renderHome, shop: renderShop, cart: renderCart, checkout: renderCheckout, order: renderOrder, product: renderProduct };
+  var RENDER = { home: renderHome, shop: renderShop, track: renderTrack, cart: renderCart, checkout: renderCheckout, order: renderOrder, product: renderProduct };
   /* ---------- Product page: opens when a product card is tapped ---------- */
   function renderProduct() {
     var p = P[ui.productId], root = $("#product-body"), bar = $("#product-bar");
@@ -684,7 +808,8 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
       '<div class="' + box + ' flex flex-col gap-space-sm text-body-sm text-on-surface-variant">' +
         info("local_shipping", '<b class="text-on-surface">Delivery:</b> Standard ' + money(STANDARD) + ' (free over ' + money(FREE_AT) + '), Express ' + money(EXPRESS) + '.') +
         info("payments", '<b class="text-on-surface">Pay with:</b> ' + METHODS.map(function (m) { return m[1]; }).join(", ") + '.') +
-        info("published_with_changes", 'Easy exchange and return policy.') + '</div>' +
+        info("published_with_changes", 'Easy exchange and return policy.') +
+        info("support_agent", '<a href="' + waLink("Hi Malik Sports, I have a question about: " + p.name + " (" + money(p.price) + ")") + '" target="_blank" rel="noopener" class="font-bold text-on-surface underline">Ask us on WhatsApp</a> about this item.') + '</div>' +
       '<div class="' + box + '"><h2 class="font-headline-sm text-[18px] mb-space-xs">Details</h2>' + det.map(function (m) { return '<div class="flex justify-between gap-space-md py-2.5 border-b border-surface-variant last:border-b-0 text-body-sm"><span class="text-on-surface-variant">' + m[0] + '</span><span class="text-on-surface font-semibold text-right">' + m[1] + '</span></div>'; }).join("") + '</div>' +
       (p.desc ? '<div class="' + box + '"><h2 class="font-headline-sm text-[18px] mb-space-xs">Description</h2><p class="text-body-sm text-on-surface-variant whitespace-pre-line leading-relaxed">' + esc(p.desc) + '</p></div>' : '') +
       (rel.length ? '<h2 class="font-headline-sm text-[18px] mt-space-sm">You may also like</h2><div class="grid grid-cols-2 gap-space-sm">' + rel.map(card).join("") + '</div>' : '');
@@ -696,7 +821,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     var r = route();
     var changed = cur !== r;
     if (changed) { if (cur) prev = cur; cur = r; }
-    ["home", "shop", "cart", "checkout", "order", "product"].forEach(function (v) { $("#view-" + v).hidden = v !== r; });
+    ["home", "shop", "track", "cart", "checkout", "order", "product"].forEach(function (v) { $("#view-" + v).hidden = v !== r; });
     $("#product-bar").hidden = true;
     RENDER[r]();
     chrome(r);
@@ -710,7 +835,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     var l = S.cart.filter(function (x) { return x.id === id; })[0];
     if (l) l.qty = Math.min(99, l.qty + n); else S.cart.push({ id: id, qty: n });
   }
-  document.addEventListener("keydown", function (e) { var t = e.target; if (e.key === "Enter" && t && t.dataset && t.dataset.act === "open") t.click(); });
+  document.addEventListener("keydown", function (e) { var t = e.target; if (e.key === "Enter" && t && t.dataset && t.dataset.act === "open") t.click(); if (e.key === "Enter" && t && (t.id === "t-id" || t.id === "t-phone")) doTrack(); });
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-act]"); if (!t) return;
     var a = t.dataset.act, id = t.dataset.id;
@@ -751,6 +876,9 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
         var all = orders(); all.unshift(od); wr("ms-orders-pk", all); if (window.msMail) msMail(od, "placed");
         S.cart = []; S.promo = null; ui.promoMsg = ""; ui.orderId = od.id; save(); $("#checkout-body").innerHTML = ""; go("order"); break;
       }
+      case "track-go": doTrack(); break;
+      case "track-recent": { var ro = orders()[Number(t.dataset.i)]; if (ro) { ui.trackId = ro.id; ui.trackPhone = ro.customer.phone; renderTrack(); } break; }
+      case "track-order": { var co = orders().filter(function (x) { return x.id === ui.orderId; })[0]; if (co) { ui.trackId = co.id; ui.trackPhone = co.customer.phone; } go("track"); break; }
       case "soon": toast(t.dataset.msg || "That part is not available yet."); break;
     }
   });
@@ -758,6 +886,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     var el = e.target;
     if (el.name === "delivery") { S.delivery = el.value; refresh(); }
     if (el.name === "pay") { ui.pay = el.value; payUI(); }
+    if (el.id === "sort-by") { ui.sort = el.value; renderShop(); }
   });
   $("#product-search").addEventListener("input", function (e) { ui.q = e.target.value; renderShop(); });
 
@@ -767,6 +896,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     else if (e.key === "ms-vouchers-pk" && cur === "cart") refresh();
   });
   render();
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(function () {});
 })();
 </script>
 

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Malik Controller</title>
+<meta name="robots" content="noindex, nofollow">
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&display=swap">
 <style>
@@ -19,7 +20,7 @@ a{color:var(--cy)}
 .tabs{display:flex;gap:4px;background:#0e0e12;padding:4px;border-radius:12px;margin-bottom:16px}
 .tabs button{flex:1}
 button{font:inherit;cursor:pointer;border:0;color:var(--fg)}
-.tab{background:none;padding:10px;border-radius:8px;font-weight:600;color:var(--mute)}
+.tab{background:none;padding:10px 4px;border-radius:8px;font-weight:600;font-size:14px;color:var(--mute)}
 .tab.on{background:var(--hi);color:var(--acc)}
 #nb{background:var(--acc);color:var(--ink);border-radius:99px;padding:0 7px;font-size:12px;margin-left:6px}
 .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
@@ -46,6 +47,7 @@ input,select,textarea{display:block;width:100%;margin-top:4px;padding:11px 12px;
 textarea{resize:vertical}
 .empty{text-align:center;padding:32px 16px}.empty p{margin:4px 0 0}
 .gate{max-width:24rem;margin:15vh auto 0}.gate p{margin:8px 0 16px}.gate .btn{width:100%}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(min-width:700px){.stats{grid-template-columns:repeat(4,1fr)}}.stat{padding:14px}.stat .total{font-size:22px;line-height:1.2}.bars{display:flex;align-items:flex-end;gap:8px;height:130px;margin-top:8px}.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%;min-width:0}.bar i{display:block;width:100%;background:var(--acc);border-radius:6px 6px 0 0;min-height:3px}.bar span{font-size:11px;color:var(--mute)}.bar b{font-size:11px;font-weight:600}.meter{height:8px;border-radius:99px;background:#0e0e12;overflow:hidden;margin-top:6px}.meter i{display:block;height:100%;background:var(--acc);border-radius:99px}
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:var(--acc);color:var(--ink);font-weight:700;padding:12px 20px;border-radius:12px;transition:.25s;pointer-events:none}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -153,7 +155,7 @@ window.MS_KEY = "AIzaSyCKHqm-_cjIxPJp403wB-1A8g5nF43P_GY";   // e.g. AIzaSy...
     if (k === "ms-products-pk") db("PUT", "products", v).catch(fail);
     else if (k === "ms-vouchers-pk") db("PUT", "vouchers", v).catch(fail);
     else if (k === "ms-orders-pk") {
-      try { JSON.parse(v).forEach(function (o) { var s = JSON.stringify(o); if (snap[o.id] !== s) { snap[o.id] = s; db("PUT", "orders/" + o.id, s).catch(fail); } }); } catch (e) {}
+      try { JSON.parse(v).forEach(function (o) { var s = JSON.stringify(o), old = snap[o.id], ps = null; try { ps = old ? JSON.parse(old).status : null; } catch (e) {} if (old !== s) { snap[o.id] = s; db("PUT", "orders/" + o.id, s).catch(fail); if (ps !== o.status) db("PUT", "track/" + o.id + "/s", o.status).catch(function () {}); } }); } catch (e) {}
     }
   };
 })();
@@ -195,7 +197,7 @@ function badge(){
 }
 function main(){
   $("#app").innerHTML=`<div class="top"><h1>Malik Sports · Owner</h1><div class="row g"><a href="https://maliksports.github.io/Malik-Sports/">View shop</a><button class="btn" data-a="lock">Lock</button></div></div>
-  <div class="tabs"><button class="tab${tab==="orders"?" on":""}" data-a="tab" data-v="orders">Orders<span id="nb"></span></button><button class="tab${tab==="products"?" on":""}" data-a="tab" data-v="products">Products</button><button class="tab${tab==="vouchers"?" on":""}" data-a="tab" data-v="vouchers">Vouchers</button></div>`+(tab==="orders"?ordersView():tab==="vouchers"?vouchersView():productsView());
+  <div class="tabs"><button class="tab${tab==="orders"?" on":""}" data-a="tab" data-v="orders">Orders<span id="nb"></span></button><button class="tab${tab==="products"?" on":""}" data-a="tab" data-v="products">Products</button><button class="tab${tab==="vouchers"?" on":""}" data-a="tab" data-v="vouchers">Vouchers</button><button class="tab${tab==="report"?" on":""}" data-a="tab" data-v="report">Report</button></div>`+(tab==="orders"?ordersView():tab==="vouchers"?vouchersView():tab==="report"?reportView():productsView());
   badge();
 }
 function ordersView(){
@@ -213,6 +215,35 @@ function orderCard(x){
   <ul class="items">${x.lines.map(l=>`<li><span>${esc(l.name)} × ${l.qty}</span><span>${money(l.price*l.qty)}</span></li>`).join("")}</ul>${x.voucher?`<div class="sm mute" style="margin:-4px 0 10px">Voucher ${esc(x.voucher.code)}: -${money(x.voucher.discount)}</div>`:""}
   <div class="row g"><div class="mute sm">${esc(PAYN[x.pay.method]||x.pay.method)}${x.pay.txn?` · ID <b>${esc(x.pay.txn)}</b>`:""}<br>${x.delivery==="express"?"Express":"Standard"} delivery</div><div class="total">${money(x.totals.total)}</div></div>
   <div class="acts">${n?`<button class="btn pri" data-a="st" data-id="${id}" data-v="${n[0]}">${n[1]}</button>`:""}${x.status==="pending"||x.status==="confirmed"?`<button class="btn bad" data-a="st" data-id="${id}" data-v="cancelled">Cancel order</button>`:""}</div></article>`;
+}
+const dayKey=d=>d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+function reportView(){
+  const all=rd("ms-orders-pk",[]),live=all.filter(x=>x.status!=="cancelled"),tot=a=>a.reduce((s,x)=>s+((x.totals&&x.totals.total)||0),0);
+  const delivered=all.filter(x=>x.status==="delivered"),pending=all.filter(x=>x.status==="pending");
+  const disc=live.reduce((s,x)=>s+(x.voucher?x.voucher.discount:0),0),avg=live.length?tot(live)/live.length:0;
+  const stat=(k,v,s)=>`<div class="card stat" style="margin:0"><div class="mute sm">${k}</div><div class="total">${v}</div>${s?`<div class="mute sm">${s}</div>`:""}</div>`;
+  const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-i);days.push(d)}
+  const by={};live.forEach(x=>{const k=dayKey(new Date(x.placedAt));(by[k]=by[k]||{n:0,t:0});by[k].n++;by[k].t+=x.totals.total});
+  const max=Math.max(1,...days.map(d=>(by[dayKey(d)]||{t:0}).t));
+  const bars=days.map(d=>{const v=by[dayKey(d)]||{n:0,t:0};return `<div class="bar" title="${esc(d.toDateString())}: ${v.n} orders, ${money(v.t)}"><b>${v.n||""}</b><i style="height:${Math.round(v.t/max*100)}%"></i><span>${d.toLocaleDateString("en-GB",{weekday:"short"})}</span></div>`}).join("");
+  const prod={};live.forEach(x=>x.lines.forEach(l=>{const p=prod[l.name]||(prod[l.name]={q:0,r:0});p.q+=l.qty;p.r+=l.price*l.qty}));
+  const top=Object.entries(prod).sort((a,b)=>b[1].q-a[1].q||b[1].r-a[1].r).slice(0,5),topMax=Math.max(1,...top.map(x=>x[1].q));
+  const pay={};live.forEach(x=>{const m=PAYN[x.pay.method]||x.pay.method;pay[m]=(pay[m]||0)+1});
+  const st=Object.keys(ST).map(s=>`<span class="badge ${ST[s][1]}">${ST[s][0]} ${all.filter(x=>x.status===s).length}</span>`).join(" ");
+  if(!all.length)return `<div class="card empty"><b>No sales yet</b><p class="mute">When customers place orders, your sales report shows up here.</p></div>`;
+  return `<div class="stats">${stat("Orders",all.length,pending.length+" waiting for confirmation")}${stat("Sales",money(tot(live)),"With delivery, no cancelled")}${stat("Delivered",money(tot(delivered)),delivered.length+" orders")}${stat("Average order",money(avg),disc?money(disc)+" given as vouchers":"")}</div>
+  <div class="card" style="margin-top:12px"><h2>Last 7 days</h2><div class="mute sm">Bar height is sales. The number on top is orders.</div><div class="bars">${bars}</div></div>
+  <div class="card"><h2>Best sellers</h2>${top.length?top.map(([n,v])=>`<div style="margin-bottom:10px"><div class="row g"><span>${esc(n)}</span><b>${v.q} sold</b></div><div class="meter"><i style="width:${Math.round(v.q/topMax*100)}%"></i></div><div class="mute sm">${money(v.r)}</div></div>`).join(""):`<p class="mute">Nothing sold yet.</p>`}</div>
+  <div class="card"><h2>Orders by status</h2><div class="acts" style="margin-top:0">${st}</div><h2 class="h2">Payment methods</h2><div class="acts" style="margin-top:0">${Object.entries(pay).map(([k,v])=>`<span class="badge">${esc(k)} ${v}</span>`).join(" ")||`<span class="mute">None yet</span>`}</div></div>
+  <button class="btn pri" data-a="csv" style="width:100%">Download all orders (CSV)</button>`;
+}
+function csvDownload(){
+  const o=rd("ms-orders-pk",[]);if(!o.length){toast("No orders to download yet");return}
+  const cell=v=>{let s=String(v==null?"":v);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'};
+  const head=["Order","Placed","Status","Name","Phone","Email","City","Address","Items","Payment","Transaction ID","Delivery","Subtotal","Voucher","Discount","Delivery fee","Total"];
+  const rows=o.map(x=>[x.id,x.placedAt,x.status,x.customer.name,x.customer.phone,x.customer.email,x.customer.city,x.customer.address,x.lines.map(l=>l.name+" x"+l.qty).join("; "),PAYN[x.pay.method]||x.pay.method,x.pay.txn||"",x.delivery,x.totals.sub,x.voucher?x.voucher.code:"",x.voucher?x.voucher.discount:0,(x.totals.shipping||0)+(x.totals.tax||0),x.totals.total]);
+  const blob=new Blob(["﻿"+[head,...rows].map(r=>r.map(cell).join(",")).join("\r\n")],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="malik-sports-orders-"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Orders file downloaded");
 }
 function productsView(){
   const P=rd("ms-products-pk",null);
@@ -252,7 +283,8 @@ document.addEventListener("click",e=>{
     const all=rd("ms-orders-pk",[]),x=all.find(o=>o.id===id);if(!x)return;
     if(v==="cancelled"&&!confirm("Cancel order #"+id+"?"))return;
     x.status=v;wr("ms-orders-pk",all);main();const msg="Order #"+id+" "+ST[v][0].toLowerCase();toast(msg);(window.msMail?msMail(x,v):Promise.resolve("off")).then(r=>toast(msg+(r==="ok"?" · email sent":r==="off"?" · email not set up yet":" · email could not be sent")));
-  }else if(a==="cam")$("#ph1").click();
+  }else if(a==="csv")csvDownload();
+  else if(a==="cam")$("#ph1").click();
   else if(a==="gal")$("#ph2").click();
   else if(a==="rmph"){photo="";$("#prev").innerHTML=""}
   else if(a==="desc"){editId=editId===id?null:id;main()}
