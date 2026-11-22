@@ -770,22 +770,10 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
         '<div class="bg-surface-container rounded-xl p-space-md flex flex-col gap-space-sm shadow-md"><label class="' + LBL + '">Order number<input id="t-id" type="text" autocomplete="off" autocapitalize="characters" placeholder="MS-XXXXXX" class="' + INP + ' uppercase placeholder:normal-case"></label>' +
         '<label class="' + LBL + '">Phone number<input id="t-phone" type="tel" autocomplete="tel" placeholder="03XX XXXXXXX" class="' + INP + '"></label>' +
         '<button type="button" data-act="track-go" class="' + BTN + ' w-full flex items-center justify-center gap-space-xs"><span class="material-symbols-outlined text-[20px]">search</span>Track order</button></div>' +
-        '<div id="track-result" role="status" aria-live="polite"></div><div id="track-recent"></div>';
+        '<div id="track-result" role="status" aria-live="polite"></div>';
     }
     var go1 = !!ui.trackId;
     if (go1) { $("#t-id").value = ui.trackId; $("#t-phone").value = ui.trackPhone || ""; ui.trackId = ""; ui.trackPhone = ""; doTrack(); }
-    var mine = orders().slice(0, 5), box = $("#track-recent");
-    if (!mine.length) { box.innerHTML = ""; return; }
-    box.innerHTML = '<h2 class="font-headline-sm text-[18px] mb-space-sm">Your recent orders</h2><div class="flex flex-col gap-space-xs">' + mine.map(function (o, i) {
-      var st = STATUS[live()[o.id] || o.status] || STATUS.pending, d = new Date(o.placedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-      return '<button type="button" data-act="track-recent" data-i="' + i + '" class="w-full text-left bg-surface-container rounded-xl p-space-md flex items-center justify-between gap-space-md hover:bg-surface-container-high transition-colors"><span><b>#' + esc(o.id) + '</b><span class="block text-[12px] text-on-surface-variant">' + d + ' · ' + money(o.totals.total) + '</span></span><span data-live="' + esc(o.id) + '" class="text-label-md font-bold ' + st[1] + '">' + st[0] + '</span></button>';
-    }).join("") + '</div>';
-    mine.forEach(function (o) {
-      fetchTrack(o.id, o.customer && o.customer.phone).then(function (r) {
-        var el = document.querySelector('[data-live="' + o.id + '"]'); if (!r.ok || !el) return;
-        var st = STATUS[r.s] || STATUS.pending; el.textContent = st[0]; el.className = "text-label-md font-bold " + st[1];
-      });
-    });
   }
 
   /* ---------- Render ---------- */
@@ -877,7 +865,6 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
         S.cart = []; S.promo = null; ui.promoMsg = ""; ui.orderId = od.id; save(); $("#checkout-body").innerHTML = ""; go("order"); break;
       }
       case "track-go": doTrack(); break;
-      case "track-recent": { var ro = orders()[Number(t.dataset.i)]; if (ro) { ui.trackId = ro.id; ui.trackPhone = ro.customer.phone; renderTrack(); } break; }
       case "track-order": { var co = orders().filter(function (x) { return x.id === ui.orderId; })[0]; if (co) { ui.trackId = co.id; ui.trackPhone = co.customer.phone; } go("track"); break; }
       case "soon": toast(t.dataset.msg || "That part is not available yet."); break;
     }
