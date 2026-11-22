@@ -118,6 +118,8 @@ window.MS_EMAIL = {
 })();
 </script>
 <script>
+/* ============ OWNER ALERTS (ntfy): the same secret word must be in index.html and admin.html ============ */
+window.MS_NTFY = "malik-sports-akivmv6xef29q7w357";
 /* ============ SHARED DATABASE: paste your Firebase database address between the quotes ============ */
 window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. https://malik-sports-default-rtdb.firebaseio.com
 /* ============ Do not edit below this line ============ */
@@ -189,6 +191,17 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
         <span class="material-symbols-outlined">shopping_bag</span>
         <span id="bag-count" class="absolute top-1 right-1 bg-secondary-container text-on-secondary font-label-md w-5 h-5 rounded-full flex items-center justify-center font-bold text-[11px] transition-transform">0</span>
       </a>
+      <div class="relative">
+        <button type="button" id="more-btn" data-act="more" aria-label="More options" aria-haspopup="true" aria-expanded="false" class="relative flex items-center justify-center w-11 h-11 rounded-xl hover:bg-surface-container transition-colors">
+          <span class="material-symbols-outlined">more_vert</span>
+          <span id="sup-dot" hidden class="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-error"></span>
+        </button>
+        <div id="more-menu" hidden role="menu" class="absolute right-0 top-12 w-60 bg-surface rounded-xl shadow-2xl border border-surface-variant py-1 z-[70]">
+          <button type="button" role="menuitem" data-act="go" data-r="support" class="w-full flex items-center gap-space-sm px-space-md py-3 text-left text-body-sm font-bold hover:bg-surface-container"><span class="material-symbols-outlined text-[22px]">support_agent</span><span class="flex-1">Support</span><span id="sup-dot2" hidden class="w-2.5 h-2.5 rounded-full bg-error"></span></button>
+          <button type="button" role="menuitem" data-act="go" data-r="track" class="w-full flex items-center gap-space-sm px-space-md py-3 text-left text-body-sm font-bold hover:bg-surface-container"><span class="material-symbols-outlined text-[22px]">local_shipping</span>Track order</button>
+          <a role="menuitem" id="more-wa" href="#" target="_blank" rel="noopener" class="w-full flex items-center gap-space-sm px-space-md py-3 text-left text-body-sm font-bold hover:bg-surface-container"><span class="material-symbols-outlined text-[22px]">chat</span>WhatsApp</a>
+        </div>
+      </div>
     </div>
   </div>
 </header>
@@ -350,6 +363,9 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
 
     <!-- TRACK -->
     <section id="view-track" hidden class="w-full pt-space-md"><div id="track-body" class="max-w-2xl mx-auto flex flex-col gap-space-md"></div></section>
+
+    <!-- SUPPORT -->
+    <section id="view-support" hidden class="w-full pt-space-md"><div id="support-body" class="max-w-2xl mx-auto flex flex-col gap-space-md"></div></section>
 
     <!-- ORDER -->
     <section id="view-order" hidden class="w-full pt-space-sm"><div id="order-body" class="max-w-2xl mx-auto flex flex-col space-y-5"></div></section>
@@ -521,7 +537,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
   /* ---------- Routing ---------- */
   var ROUTES = {
     home: { title: "Home", tab: "home" }, shop: { title: "Shop", tab: "shop" }, cart: { title: "Cart", tab: "cart" },
-    track: { title: "Track order", tab: "track" },
+    track: { title: "Track order", tab: "track" }, support: { title: "Support", tab: "support", stack: true },
     checkout: { title: "Checkout", tab: "cart", stack: true }, order: { title: "Order placed", tab: "shop", stack: true }, product: { title: "Product", tab: "shop", stack: true }
   };
   var cur = null, prev = null;
@@ -532,6 +548,9 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
   function chrome(r) {
     var R = ROUTES[r];
     $("#hdr-title").textContent = R.title;
+    var mm = $("#more-menu"); if (mm) { mm.hidden = true; $("#more-btn").setAttribute("aria-expanded", "false"); }
+    var mw = $("#more-wa"); if (mw) mw.href = waLink("Hi Malik Sports, I need some help.");
+    supDotUpdate(); if (r !== "support") setTimeout(supCheck, 900);
     $("#back-btn").hidden = !R.stack;
     $("#logo-mark").classList.toggle("hidden", !!R.stack);
     $("#logo-mark").classList.add("md:block");
@@ -551,7 +570,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     });
     var n = units(S.cart), b = $("#bag-count");
     b.textContent = n; b.hidden = n === 0;
-    var w = $("#wa-float"); if (w) { w.hidden = r === "checkout" || r === "product" || r === "order"; w.href = waLink("Hi Malik Sports, I need some help."); }
+    var w = $("#wa-float"); if (w) { w.hidden = r === "checkout" || r === "product" || r === "order" || r === "support"; w.href = waLink("Hi Malik Sports, I need some help."); }
   }
 
   /* ---------- Shared pieces ---------- */
@@ -587,7 +606,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     var lk = "text-body-sm text-on-surface-variant hover:text-on-surface transition-colors";
     $("#site-footer").innerHTML = '<div class="grid md:grid-cols-3 gap-space-lg">' +
       '<div><div class="font-headline-md text-[28px] uppercase tracking-wide leading-none">Malik Sports</div><p class="text-body-sm text-on-surface-variant mt-space-sm max-w-xs">Cricket, football and sports gear, delivered across Pakistan.</p></div>' +
-      '<div class="flex flex-col gap-space-xs"><span class="text-label-lg uppercase tracking-wider font-bold">Shop</span><a href="#shop" class="' + lk + '">All gear</a><a href="#track" class="' + lk + '">Track your order</a><a href="#cart" class="' + lk + '">Your cart</a></div>' +
+      '<div class="flex flex-col gap-space-xs"><span class="text-label-lg uppercase tracking-wider font-bold">Shop</span><a href="#shop" class="' + lk + '">All gear</a><a href="#track" class="' + lk + '">Track your order</a><a href="#support" class="' + lk + '">Support</a><a href="#cart" class="' + lk + '">Your cart</a></div>' +
       '<div class="flex flex-col gap-space-xs"><span class="text-label-lg uppercase tracking-wider font-bold">Help</span><a href="' + waLink("Hi Malik Sports, I need some help.") + '" target="_blank" rel="noopener" class="' + lk + '">Chat on WhatsApp</a><span class="' + lk + '">Pay by Cash on Delivery, Easypaisa or JazzCash</span></div></div>' +
       '<p class="text-[12px] text-outline mt-space-lg">© ' + new Date().getFullYear() + ' Malik Sports. All rights reserved.</p>';
     $("#home-pills").innerHTML = '<div class="flex items-center gap-space-sm w-max">' + pills("none", "home") + '</div>';
@@ -777,7 +796,126 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
   }
 
   /* ---------- Render ---------- */
-  var RENDER = { home: renderHome, shop: renderShop, track: renderTrack, cart: renderCart, checkout: renderCheckout, order: renderOrder, product: renderProduct };
+  /* ---------- Support chat: customer writes here, the owner answers from admin.html ---------- */
+  var SUP_AUTO = "Assalam-o-Alaikum! Shukriya ke aap ne humein message kiya. Aap ko bohat jald aap ka jawab mil jayega. Meharbani karke apna masla tafseel se bayan kar dein.";
+  var SUP = { msgs: [], sig: "", busy: false, id: "", timer: null };
+  function lsGet(k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function supId() { var id = SUP.id || lsGet("ms-sup-id"); return /^c[a-z0-9]{20}$/.test(id) ? id : ""; }
+  function supNewId() {
+    var a = new Uint8Array(20), s = "c", i;
+    try { crypto.getRandomValues(a); } catch (e) { for (i = 0; i < 20; i++) a[i] = Math.floor(Math.random() * 256); }
+    for (i = 0; i < 20; i++) s += "abcdefghijklmnopqrstuvwxyz0123456789".charAt(a[i] % 36);
+    SUP.id = s; lsSet("ms-sup-id", s); return s;
+  }
+  function supFetch(id) {
+    return fetch(DB + "/support/" + id + "/m.json").then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function (j) {
+      var a = []; Object.keys(j || {}).sort().forEach(function (k) { var m = j[k]; if (m && typeof m.x === "string") a.push({ id: k, f: m.f, x: m.x, t: m.t }); }); return a;
+    });
+  }
+  function supPut(id, f, text, offset) {
+    var at = Date.now() + (offset || 0), mid = at.toString(36) + Math.random().toString(36).slice(2, 4);
+    return fetch(DB + "/support/" + id + "/m/" + mid + ".json", { method: "PUT", body: JSON.stringify({ f: f, x: text, t: new Date(at).toISOString() }) }).then(function (r) { if (!r.ok) throw new Error("send"); return mid; });
+  }
+  function supBubble(m) {
+    var me = m.f === "c", bot = m.f === "b", tm = m.t ? new Date(m.t).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";
+    return '<div class="flex ' + (me ? "justify-end" : "justify-start") + '"><div class="max-w-[84%] ' + (me ? "bg-secondary-container text-on-secondary rounded-2xl rounded-br-sm" : "bg-surface-container-high text-on-surface rounded-2xl rounded-bl-sm") + ' px-space-md py-2.5 shadow-sm">' +
+      '<div class="text-[11px] font-bold uppercase tracking-wider opacity-70 mb-0.5">' + (me ? "You" : bot ? "Malik Sports &middot; Auto reply" : "Malik Sports") + '</div>' +
+      '<div class="text-body-sm whitespace-pre-wrap break-words">' + esc(m.x) + '</div><div class="text-[11px] opacity-60 mt-1 text-right">' + tm + '</div></div></div>';
+  }
+  function supPaint(a, force) {
+    var box = $("#sup-msgs"); if (!box) return;
+    var sig = a.length + ":" + (a.length ? a[a.length - 1].id : "");
+    if (sig === SUP.sig && !force) return;
+    var grew = a.length > SUP.msgs.length || !SUP.sig;
+    SUP.sig = sig; SUP.msgs = a;
+    box.innerHTML = a.length ? a.map(supBubble).join("") :
+      '<div class="bg-surface-container rounded-xl p-space-lg text-center text-on-surface-variant"><span class="material-symbols-outlined text-[40px] text-tertiary">forum</span><p class="font-bold text-on-surface mt-1">Say hello!</p><p class="text-body-sm mt-1">Ask about a product, delivery, payment or your order. We reply here.</p></div>';
+    if (a.length) lsSet("ms-sup-seen", a[a.length - 1].id);
+    supDotUpdate();
+    if (grew && a.length) setTimeout(function () { window.scrollTo(0, document.body.scrollHeight); }, 30);
+  }
+  function supLoad(force) {
+    var id = supId();
+    if (!id || !LIVE) { supPaint([], force); return Promise.resolve(); }
+    return supFetch(id).then(function (a) { if (cur === "support") supPaint(a, force); }, function () { if (force) supPaint(SUP.msgs, true); });
+  }
+  function renderSupport() {
+    var root = $("#support-body");
+    if (!$("#sup-msgs")) {
+      var nm = lsGet("ms-sup-name");
+      root.innerHTML =
+        '<div class="bg-surface-container rounded-xl p-space-md shadow-md flex items-center gap-space-md"><span class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center shrink-0"><span class="material-symbols-outlined">support_agent</span></span>' +
+        '<div class="min-w-0"><h1 class="font-headline-sm text-[20px] uppercase leading-tight">Malik Sports Support</h1><p class="text-body-sm text-on-surface-variant">Write to us here. Come back to this page to read our reply. A red dot on the &#8942; menu shows when we have answered.</p>' +
+        '<button type="button" id="sup-notify" data-act="sup-notify" hidden class="mt-1 text-body-sm font-bold underline">Notify me when you reply</button></div></div>' +
+        (LIVE ? "" : '<div class="bg-surface-container rounded-xl p-space-md text-error text-body-sm">Chat is not available right now. Please message us on WhatsApp.</div>') +
+        '<div id="sup-msgs" class="flex flex-col gap-space-sm min-h-[30vh]" role="log" aria-live="polite"></div>' +
+        '<div id="sup-form" class="sticky bottom-3 bg-surface rounded-xl p-space-sm shadow-2xl border border-surface-variant flex flex-col gap-space-xs">' +
+          (nm ? "" : '<input id="sup-name" type="text" maxlength="40" autocomplete="name" placeholder="Your name" class="' + INP + ' !mt-0">') +
+          '<div class="flex gap-space-xs items-end"><textarea id="sup-text" rows="2" maxlength="600" placeholder="Type your message…" class="' + INP + ' !mt-0 flex-1 resize-none"></textarea>' +
+          '<button type="button" data-act="sup-send" aria-label="Send message" class="bg-secondary-container text-on-secondary w-12 h-12 rounded-xl flex items-center justify-center shrink-0"><span class="material-symbols-outlined">send</span></button></div>' +
+          '<p id="sup-err" class="text-error text-[12px] min-h-[1em]" role="alert"></p></div>';
+      SUP.sig = ""; SUP.msgs = [];
+    }
+    supNotifyBtn(); supLoad(true);
+    if (!SUP.timer) SUP.timer = setInterval(function () { if (cur === "support" && !document.hidden) supLoad(false); }, 5000);
+  }
+  function supSend() {
+    var ta = $("#sup-text"), nmEl = $("#sup-name"), er = $("#sup-err"); if (!ta) return;
+    var text = ta.value.trim(), name = nmEl ? nmEl.value.trim() : lsGet("ms-sup-name");
+    if (!LIVE) { er.textContent = "Chat is not available right now. Please use WhatsApp."; return; }
+    if (!name) { er.textContent = "Please enter your name."; nmEl && nmEl.focus(); return; }
+    if (!text) { er.textContent = "Type a message first."; ta.focus(); return; }
+    if (SUP.busy) return; SUP.busy = true; er.textContent = "";
+    var id = supId() || supNewId(), last = SUP.msgs[SUP.msgs.length - 1];
+    var needBot = !last || !last.t || Date.now() - new Date(last.t).getTime() > 6 * 3600 * 1000;
+    var named = lsGet("ms-sup-named") === id;
+    var pre = named ? Promise.resolve() : fetch(DB + "/support/" + id + "/n.json", { method: "PUT", body: JSON.stringify(name.slice(0, 40)) }).then(function (r) { if (r.ok || r.status === 401) lsSet("ms-sup-named", id); }).catch(function () {});
+    pre.then(function () { return supPut(id, "c", text.slice(0, 600)); })
+      .then(function () {
+        msNotify("New support message", name.split(" ")[0].slice(0, 20) + " wrote in Support. Open admin.html to reply.", 4, "speech_balloon");
+        lsSet("ms-sup-name", name); ta.value = ""; if (nmEl) nmEl.remove();
+        if (needBot) return supPut(id, "b", SUP_AUTO, 1500).catch(function () {});
+      })
+      .then(function () { return supLoad(true); })
+      .catch(function () { er.textContent = "Could not send. Check your internet and try again."; })
+      .then(function () { SUP.busy = false; });
+  }
+  /* Phone alert for the owner through ntfy.sh (free). Only order number, amount or first name are sent, never addresses or message text. */
+  function msNotify(title, text, prio, tag) {
+    var tp = String(window.MS_NTFY || ""); if (!/^[A-Za-z0-9_-]{8,64}$/.test(tp)) return;
+    var admin = location.origin + location.pathname.replace(/[^\/]*$/, "") + "admin.html";
+    try { fetch("https://ntfy.sh/" + tp + "?title=" + encodeURIComponent(title) + "&priority=" + (prio || 4) + "&tags=" + (tag || "bell") + "&click=" + encodeURIComponent(admin), { method: "POST", mode: "no-cors", body: text }).catch(function () {}); } catch (e) {}
+  }
+  /* Browser alert for the customer when the owner replies (works while the shop is open in a tab). */
+  function supBrowserNotify(title, body) {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    var o = { body: body, icon: "icon-192.png", tag: "ms-support", vibrate: [150, 80, 150] };
+    var fb = function () { try { new Notification(title, o); } catch (e) {} };
+    if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) navigator.serviceWorker.getRegistration().then(function (r) { if (r && r.showNotification) r.showNotification(title, o); else fb(); }).catch(fb); else fb();
+  }
+  function supNotifyBtn() {
+    var b = $("#sup-notify"); if (!b) return;
+    b.hidden = !("Notification" in window) || Notification.permission !== "default";
+  }
+  function supDotUpdate() {
+    var on = !!SUP.unread && cur !== "support";
+    ["#sup-dot", "#sup-dot2"].forEach(function (s) { var e = $(s); if (e) e.hidden = !on; });
+  }
+  function supCheck() {
+    var id = supId(); if (!id || !LIVE || cur === "support" || document.hidden || Date.now() - (SUP.checked || 0) < 8000) return;
+    SUP.checked = Date.now();
+    supFetch(id).then(function (a) {
+      var l = a[a.length - 1]; SUP.unread = !!l && l.f === "a" && l.id > lsGet("ms-sup-seen"); supDotUpdate();
+      if (SUP.unread && l.id !== lsGet("ms-sup-notified")) { lsSet("ms-sup-notified", l.id); supBrowserNotify("Malik Sports replied", "Open Support to read our answer."); }
+    }, function () {});
+  }
+  document.addEventListener("click", function (e) { var mn = $("#more-menu"); if (mn && !mn.hidden && !e.target.closest("#more-btn")) { mn.hidden = true; $("#more-btn").setAttribute("aria-expanded", "false"); } });
+  document.addEventListener("keydown", function (e) { if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && e.target && e.target.id === "sup-text") supSend(); if (e.key === "Escape") { var mn = $("#more-menu"); if (mn) mn.hidden = true; } });
+  setTimeout(supCheck, 2500); setInterval(supCheck, 30000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) supCheck(); });
+
+  var RENDER = { home: renderHome, shop: renderShop, track: renderTrack, support: renderSupport, cart: renderCart, checkout: renderCheckout, order: renderOrder, product: renderProduct };
   /* ---------- Product page: opens when a product card is tapped ---------- */
   function renderProduct() {
     var p = P[ui.productId], root = $("#product-body"), bar = $("#product-bar");
@@ -809,7 +947,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     var r = route();
     var changed = cur !== r;
     if (changed) { if (cur) prev = cur; cur = r; }
-    ["home", "shop", "track", "cart", "checkout", "order", "product"].forEach(function (v) { $("#view-" + v).hidden = v !== r; });
+    ["home", "shop", "track", "support", "cart", "checkout", "order", "product"].forEach(function (v) { $("#view-" + v).hidden = v !== r; });
     $("#product-bar").hidden = true;
     RENDER[r]();
     chrome(r);
@@ -862,10 +1000,14 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
         var od = { id: "MS-" + Date.now().toString(36).toUpperCase().slice(-6), placedAt: new Date().toISOString(), status: "pending", customer: cu, pay: { method: ui.pay, txn: fv("txn") }, delivery: S.delivery, totals: tt, voucher: tt.discount ? { code: tt.code, discount: tt.discount } : null,
           lines: S.cart.map(function (l) { var p = P[l.id]; return { id: p.id, name: p.cartName, price: p.price, qty: l.qty }; }) };
         var all = orders(); all.unshift(od); wr("ms-orders-pk", all); if (window.msMail) msMail(od, "placed");
+        msNotify("New order " + od.id, money(tt.total) + " - " + od.lines.length + " item(s). Open admin.html to confirm it.", 5, "shopping_cart");
         S.cart = []; S.promo = null; ui.promoMsg = ""; ui.orderId = od.id; save(); $("#checkout-body").innerHTML = ""; go("order"); break;
       }
       case "track-go": doTrack(); break;
       case "track-order": { var co = orders().filter(function (x) { return x.id === ui.orderId; })[0]; if (co) { ui.trackId = co.id; ui.trackPhone = co.customer.phone; } go("track"); break; }
+      case "more": { var mn = $("#more-menu"); mn.hidden = !mn.hidden; t.setAttribute("aria-expanded", String(!mn.hidden)); break; }
+      case "sup-send": supSend(); break;
+      case "sup-notify": try { Notification.requestPermission().then(function (p) { supNotifyBtn(); if (p === "granted") toast("We will notify you when we reply"); }); } catch (e) {} break;
       case "soon": toast(t.dataset.msg || "That part is not available yet."); break;
     }
   });
