@@ -22,7 +22,7 @@ a{color:var(--cy)}
 button{font:inherit;cursor:pointer;border:0;color:var(--fg)}
 .tab{background:none;padding:10px 2px;border-radius:8px;font-weight:600;font-size:13px;color:var(--mute)}
 .tab.on{background:var(--hi);color:var(--acc)}
-#nb,#sb{background:var(--acc);color:var(--ink);border-radius:99px;padding:0 7px;font-size:12px;margin-left:6px}
+#nb{background:var(--acc);color:var(--ink);border-radius:99px;padding:0 7px;font-size:12px;margin-left:6px}
 .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
 .chip{background:var(--panel);padding:8px 14px;border-radius:99px;white-space:nowrap;font-size:14px}
 .chip.on{background:var(--acc);color:var(--ink);font-weight:700}
@@ -48,9 +48,6 @@ textarea{resize:vertical}
 .empty{text-align:center;padding:32px 16px}.empty p{margin:4px 0 0}
 .gate{max-width:24rem;margin:15vh auto 0}.gate p{margin:8px 0 16px}.gate .btn{width:100%}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(min-width:700px){.stats{grid-template-columns:repeat(4,1fr)}}.stat{padding:14px}.stat .total{font-size:22px;line-height:1.2}.bars{display:flex;align-items:flex-end;gap:8px;height:130px;margin-top:8px}.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%;min-width:0}.bar i{display:block;width:100%;background:var(--acc);border-radius:6px 6px 0 0;min-height:3px}.bar span{font-size:11px;color:var(--mute)}.bar b{font-size:11px;font-weight:600}.meter{height:8px;border-radius:99px;background:#0e0e12;overflow:hidden;margin-top:6px}.meter i{display:block;height:100%;background:var(--acc);border-radius:99px}
-.bub{max-width:86%;padding:9px 12px;border-radius:14px;margin:5px 0;white-space:pre-wrap;word-break:break-word;font-size:15px}.bub small{display:block;opacity:.65;font-size:11px;margin-top:3px}
-.bub.c{background:var(--hi);border-bottom-left-radius:4px}.bub.a{background:var(--acc);color:var(--ink);margin-left:auto;border-bottom-right-radius:4px}.bub.b{background:#0e0e12;color:var(--mute);font-size:13px;border:1px dashed var(--line)}
-#thr{max-height:52vh;overflow:auto;display:flex;flex-direction:column;padding-right:2px}.convo{display:block;width:100%;text-align:left;color:inherit;cursor:pointer}.convo .pv{margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:var(--acc);color:var(--ink);font-weight:700;padding:12px 20px;border-radius:12px;transition:.25s;pointer-events:none}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -95,6 +92,9 @@ window.MS_EMAIL = {
 <script>
 /* ============ OWNER ALERTS (ntfy): the same secret word must be in index.html and admin.html ============ */
 window.MS_NTFY = "malik-sports-akivmv6xef29q7w357";
+window.MS_HTTPS_URL = "https://maliksports.github.io/Malik-Sports/";   // the https address of your site (installing as an app works only on https)
+window.MS_FORCE_HTTPS = false;   // true = http par aane wale visitor apne aap https par chale jayenge. Pehle browser mein https:// wala address khol kar dekh lein ke wo khulta hai, phir true karein.
+try { if (window.MS_FORCE_HTTPS && location.protocol === "http:" && !/^(localhost|127\.|\[::1\])/.test(location.hostname)) location.replace("https://" + location.host + location.pathname + location.search + location.hash); } catch (e) {}
 /* ============ SHARED DATABASE: paste your 2 Firebase values between the quotes ============ */
 window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. https://malik-sports-default-rtdb.firebaseio.com
 window.MS_KEY = "AIzaSyCKHqm-_cjIxPJp403wB-1A8g5nF43P_GY";   // e.g. AIzaSy...
@@ -194,20 +194,18 @@ function lock(){
 }
 function boot(){
   $("#app").innerHTML=`<div class="card gate"><p class="mute">Loading your shop data…</p></div>`;
-  msPull().then(()=>supPull().catch(()=>{})).then(()=>{knownO=oIds()}).then(main,()=>{sessionStorage.removeItem("ms-admin-ok");lock();$("#err").textContent="Could not load. Check the setup values, your internet, then sign in again."});
+  msPull().then(()=>{knownO=oIds()}).then(main,()=>{sessionStorage.removeItem("ms-admin-ok");lock();$("#err").textContent="Could not load. Check the setup values, your internet, then sign in again."});
 }
 function badge(){
-  const n=rd("ms-orders-pk",[]).filter(x=>x.status==="pending").length,s=supUnseen();
-  document.title=(n+s?`(${n+s}) `:"")+"Malik Sports – Owner";
+  const n=rd("ms-orders-pk",[]).filter(x=>x.status==="pending").length;
+  document.title=(n?`(${n}) `:"")+"Malik Sports – Owner";
   const b=$("#nb");if(b){b.textContent=n;b.hidden=!n}
-  const c=$("#sb");if(c){c.textContent=s;c.hidden=!s}
 }
 function main(){
   $("#app").innerHTML=`<div class="top"><h1>Malik Sports · Owner</h1><div class="row g"><a href="https://maliksports.github.io/Malik-Sports/">View shop</a><button class="btn" data-a="lock">Lock</button></div></div>
   ${alertsHTML()}
-  <div class="tabs"><button class="tab${tab==="orders"?" on":""}" data-a="tab" data-v="orders">Orders<span id="nb"></span></button><button class="tab${tab==="products"?" on":""}" data-a="tab" data-v="products">Products</button><button class="tab${tab==="vouchers"?" on":""}" data-a="tab" data-v="vouchers">Vouchers</button><button class="tab${tab==="report"?" on":""}" data-a="tab" data-v="report">Report</button><button class="tab${tab==="support"?" on":""}" data-a="tab" data-v="support">Support<span id="sb"></span></button></div>`+(tab==="orders"?ordersView():tab==="vouchers"?vouchersView():tab==="report"?reportView():tab==="support"?supportView():productsView());
+  <div class="tabs"><button class="tab${tab==="orders"?" on":""}" data-a="tab" data-v="orders">Orders<span id="nb"></span></button><button class="tab${tab==="products"?" on":""}" data-a="tab" data-v="products">Products</button><button class="tab${tab==="vouchers"?" on":""}" data-a="tab" data-v="vouchers">Vouchers</button><button class="tab${tab==="report"?" on":""}" data-a="tab" data-v="report">Report</button></div>`+(tab==="orders"?ordersView():tab==="vouchers"?vouchersView():tab==="report"?reportView():productsView());
   badge();
-  if(tab==="support")supPull().then(()=>{supPaint();badge()},()=>{});
 }
 function ordersView(){
   const o=rd("ms-orders-pk",[]),cnt=s=>s==="all"?o.length:o.filter(x=>x.status===s).length;
@@ -255,7 +253,7 @@ function csvDownload(){
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="malik-sports-orders-"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Orders file downloaded");
 }
 /* ---------- Alerts: sound + phone notification when an order or a message arrives ---------- */
-let actx=null,alertsOpen=false,knownO=null;
+let actx=null,alertsOpen=false,knownO=null,ntResult=null;
 const NT=String(window.MS_NTFY||""),ntOk=/^[A-Za-z0-9_-]{8,64}$/.test(NT);
 const oIds=()=>new Set(rd("ms-orders-pk",[]).map(x=>x.id));
 function audioInit(){try{if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume()}catch(e){}}
@@ -266,17 +264,26 @@ function sysNotify(title,body){
   if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration)navigator.serviceWorker.getRegistration().then(r=>r&&r.showNotification?r.showNotification(title,o):fb()).catch(fb);else fb();
 }
 function ownerAlert(title,body){beep();try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}sysNotify(title,body);toast(title)}
+function ntTest(){
+  if(!ntOk)return Promise.resolve({ok:false,msg:"Topic naam sahi nahi hai. admin.html mein window.MS_NTFY wali line dekhein."});
+  const u="https://ntfy.sh/"+NT+"?title="+encodeURIComponent("Test alert")+"&priority=3&tags=white_check_mark",body="Malik Sports: phone alerts sahi chal rahe hain.";
+  return fetch(u,{method:"POST",body}).then(r=>r.ok?{ok:true,msg:"ntfy ne test alert qubool kar liya. Ab phone ki ntfy app mein dekhein. Agar wahan nahi aaya to app mein topic dobara check karein."}:{ok:false,msg:"ntfy ne error diya ("+r.status+"). Topic ka naam check karein."})
+    .catch(()=>fetch(u,{method:"POST",mode:"no-cors",body}).then(()=>({ok:null,msg:"Alert bheja gaya lekin jawab check nahi ho saka. Phone ki ntfy app mein dekhein."}),()=>({ok:false,msg:"ntfy.sh tak nahi pahunch saka. Internet check karein. Agar internet theek hai to shayad aap ke network ne ntfy.sh block kiya hai: dusra network ya VPN try karein."})));
+}
+function alertChecks(){
+  const https=location.protocol==="https:"||location.hostname==="localhost",perm="Notification" in window?Notification.permission:"none";
+  const row=(ok,t)=>`<div style="margin:5px 0"><b style="color:${ok?"var(--acc)":"#ff8a80"}">${ok?"OK":"Dhyan"}</b> · ${t}</div>`;
+  const hu=String(window.MS_HTTPS_URL||"").replace(/\/?$/,"/")+"admin.html";
+  return row(https,https?"Page secure (https) hai, browser notification chal sakti hai.":`Ye page <b>http</b> par khula hai. Phone ke Chrome mein browser notification sirf <b>https</b> par chalti hai. Is link se admin kholein: <b style="word-break:break-all;user-select:all">${esc(hu)}</b><br>(Phone wali ntfy notification http par bhi chalti hai.)`)
+   +row(perm==="granted",perm==="granted"?"Browser notification ki ijazat mil chuki hai.":perm==="denied"?"Browser ne notification block kar rakhi hai. Address bar ke lock/settings se Allow karein.":perm==="none"?"Is browser mein notification nahi hoti. Awaaz wale alerts chalenge.":"Browser notification ki ijazat abhi nahi di. Upar hara button dabayein.")
+   +(ntResult?row(ntResult.ok===true,esc(ntResult.msg)):"");
+}
 function ntPost(title,text,pr){if(!ntOk)return;try{fetch("https://ntfy.sh/"+NT+"?title="+encodeURIComponent(title)+"&priority="+(pr||4),{method:"POST",mode:"no-cors",body:text}).catch(()=>{})}catch(e){}}
 function checkNewOrders(){
   const now=oIds();
   if(knownO){const fresh=rd("ms-orders-pk",[]).filter(x=>!knownO.has(x.id));
     if(fresh.length){const x=fresh[0];ownerAlert(fresh.length>1?fresh.length+" new orders":"New order #"+x.id,(x.customer&&x.customer.name||"Customer")+" · "+money((x.totals&&x.totals.total)||0))}}
   knownO=now;
-}
-function supNewest(){
-  const s=supSeenMap();let best=null;
-  Object.keys(SUPD).forEach(k=>{const l=supLastC(SUPD[k]);if(l&&l.id>(s[k]||"")&&(!best||l.id>best.id))best={id:l.id,n:SUPD[k].n,x:l.x}});
-  return best;
 }
 function alertsHTML(){
   const perm=("Notification" in window)&&Notification.permission==="granted",st=perm?"Sound + browser alerts ON":"Not set up on this device";
@@ -286,50 +293,9 @@ function alertsHTML(){
   <ol class="sm mute" style="margin:0 0 10px;padding-left:20px;line-height:1.7"><li>Play Store ya App Store se <b>ntfy</b> app install karein.</li><li>App kholein, <b>+</b> dabayein, <b>Subscribe to topic</b> mein ye likhein:<br><b style="color:var(--acc);user-select:all;word-break:break-all">${esc(NT)}</b></li><li>Neeche <b>Test bhejein</b> dabayein. Phone par notification aani chahiye.</li></ol>
   <p class="mute sm" style="margin:8px 0 6px"><b>B) Is device par (page khula ho):</b> awaaz + browser notification. Page kholne ke baad ek baar screen touch karein, tab awaaz chalti hai.</p>
   <div class="acts"><button class="btn pri" data-a="alert-enable">Is device par alerts chalu karein</button><button class="btn" data-a="alert-test">Test bhejein</button></div>
-  <p class="mute sm" style="margin:10px 0 0">Notification mein sirf order number, raqam ya pehla naam jata hai. Pata ya message ka text nahi.</p></div>`;
+  <div class="sm mute" id="alert-status" style="margin-top:12px">${alertChecks()}</div>
+  <p class="mute sm" style="margin:10px 0 0">Notification mein sirf order number aur raqam jata hai. Naam, pata ya phone number nahi.</p></div>`;
 }
-/* ---------- Support: customers write from the shop, you answer here ---------- */
-let SUPD={},supOpen=null;
-const supSeenMap=()=>rd("ms-sup-seen",{});
-const supLastC=c=>{for(let i=c.m.length-1;i>=0;i--)if(c.m[i].f==="c")return c.m[i];return null};
-function supUnseen(){const s=supSeenMap();return Object.keys(SUPD).filter(k=>{const l=supLastC(SUPD[k]);return l&&l.id>(s[k]||"")}).length}
-function supMark(cid){const c=SUPD[cid];if(!c||!c.m.length)return;const s=supSeenMap();const id=c.m[c.m.length-1].id;if(s[cid]!==id){s[cid]=id;wr("ms-sup-seen",s)}}
-function supPull(){
-  if(!window.msDb)return Promise.reject(new Error("off"));
-  return msDb("GET","support").then(d=>{
-    d=d||{};const nu={};
-    Object.keys(d).forEach(cid=>{const c=d[cid]||{},m=c.m||{};const arr=Object.keys(m).sort().map(k=>({id:k,f:m[k].f,x:String(m[k].x==null?"":m[k].x),t:m[k].t}));if(arr.length)nu[cid]={n:String(c.n||"Customer"),m:arr}});
-    const before=supNewest();SUPD=nu;if(supOpen&&SUPD[supOpen])supMark(supOpen);
-    const after=supNewest();return !!after&&(!before||after.id>before.id);
-  });
-}
-const supWhen=t=>t?new Date(t).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):"";
-function supListHTML(){
-  const ids=Object.keys(SUPD).sort((a,b)=>SUPD[b].m[SUPD[b].m.length-1].id.localeCompare(SUPD[a].m[SUPD[a].m.length-1].id)),seen=supSeenMap();
-  if(!ids.length)return `<div class="card empty"><b>No messages yet</b><p class="mute">When a customer writes to you from the shop (⋮ menu, Support), the chat shows up here.</p></div>`;
-  return ids.map(k=>{
-    const c=SUPD[k],hum=c.m.filter(x=>x.f!=="b"),l=hum[hum.length-1]||c.m[c.m.length-1],lc=supLastC(c),isNew=lc&&lc.id>(seen[k]||""),needs=l.f==="c";
-    return `<button class="card convo" data-a="sup-open" data-id="${esc(k)}"><div class="row"><b>${esc(c.n)}</b><span class="badge ${isNew?"p":needs?"d":"ok"}">${isNew?"New":needs?"Needs reply":"Replied"}</span></div><div class="pv mute">${l.f==="a"?"You: ":""}${esc(l.x)}</div><div class="mute sm" style="margin-top:4px">${supWhen(l.t)}</div></button>`}).join("");
-}
-function supThreadHTML(cid){
-  const c=SUPD[cid];if(!c)return `<p class="mute">This chat is empty.</p>`;
-  return c.m.map(m=>`<div class="bub ${esc(m.f==="a"||m.f==="b"?m.f:"c")}">${m.f==="b"?"<b>Auto reply sent</b><br>":""}${esc(m.x)}<small>${m.f==="a"?"You":m.f==="b"?"Automatic":esc(c.n)} · ${supWhen(m.t)}</small></div>`).join("");
-}
-function supportView(){
-  if(supOpen&&SUPD[supOpen]){
-    const c=SUPD[supOpen];
-    return `<div class="card"><div class="row"><div><b>${esc(c.n)}</b><div class="mute sm">${c.m.filter(x=>x.f==="c").length} messages from the customer</div></div><button class="btn" data-a="sup-back">Back</button></div></div>
-    <div class="card"><div id="thr">${supThreadHTML(supOpen)}</div></div>
-    <div class="card"><label>Your reply<textarea id="sup-reply" rows="3" maxlength="600" placeholder="Write your answer…"></textarea></label><p id="sup-err" class="err" role="alert"></p><button class="btn pri" data-a="sup-send" style="width:100%">Send reply</button><button class="btn bad" data-a="sup-del" style="width:100%;margin-top:10px">Delete this chat</button></div>`;
-  }
-  supOpen=null;
-  return `<div class="mute sm" style="margin-bottom:10px">New messages appear here by themselves. The customer sees your answer when they open Support in the shop.</div><div id="sup-list">${supListHTML()}</div>`;
-}
-function supPaint(){
-  const l=$("#sup-list");if(l)l.innerHTML=supListHTML();
-  const t=$("#thr");if(t){const down=t.scrollHeight-t.scrollTop-t.clientHeight<80,n=t.children.length;t.innerHTML=supThreadHTML(supOpen);if(down||t.children.length!==n)t.scrollTop=t.scrollHeight}
-}
-function supScroll(){const t=$("#thr");if(t)t.scrollTop=t.scrollHeight}
 function productsView(){
   const P=rd("ms-products-pk",null);
   if(!Array.isArray(P))return `<div class="card empty"><b>Shop products not loaded yet</b><p class="mute"><a href="https://maliksports.github.io/Malik-Sports/">Open the shop</a> once in this browser, then come back here.</p></div>`;
@@ -370,17 +336,8 @@ document.addEventListener("click",e=>{
     x.status=v;wr("ms-orders-pk",all);main();const msg="Order #"+id+" "+ST[v][0].toLowerCase();toast(msg);(window.msMail?msMail(x,v):Promise.resolve("off")).then(r=>toast(msg+(r==="ok"?" · email sent":r==="off"?" · email not set up yet":" · email could not be sent")));
   }else if(a==="alerts"){alertsOpen=!alertsOpen;audioInit();main()}
   else if(a==="alert-enable"){audioInit();const done=()=>{beep();main();toast(("Notification" in window)&&Notification.permission==="granted"?"Alerts ON on this device":"Sound alerts ON (browser notification not allowed)")};("Notification" in window)?Notification.requestPermission().then(done,done):done()}
-  else if(a==="alert-test"){ownerAlert("Test alert","Agar ye dikhe ya sunai de to alerts theek hain.");ntPost("Test alert","Malik Sports: phone alerts sahi chal rahe hain.",3)}
-  else if(a==="sup-open"){supOpen=id;supMark(id);main();setTimeout(supScroll,30)}
-  else if(a==="sup-back"){supOpen=null;main()}
-  else if(a==="sup-send"){
-    const ta=$("#sup-reply"),tx=ta.value.trim();if(!tx||!supOpen)return;
-    const cid=supOpen,at=Date.now(),mid=at.toString(36)+Math.random().toString(36).slice(2,4),m={f:"a",x:tx.slice(0,600),t:new Date(at).toISOString()};
-    t.disabled=true;
-    msDb("PUT","support/"+cid+"/m/"+mid,m).then(()=>{SUPD[cid].m.push({id:mid,f:"a",x:m.x,t:m.t});ta.value="";supMark(cid);supPaint();supScroll();toast("Reply sent")},()=>toast("Could not send. Lock and sign in again.")).then(()=>{t.disabled=false});
-  }else if(a==="sup-del"){
-    if(supOpen&&confirm("Delete this whole chat?")){const cid=supOpen;msDb("DELETE","support/"+cid).then(()=>{delete SUPD[cid];supOpen=null;main();toast("Chat deleted")},()=>toast("Could not delete. Lock and sign in again."))}
-  }else if(a==="csv")csvDownload();
+  else if(a==="alert-test"){ownerAlert("Test alert","Agar ye dikhe ya sunai de to alerts theek hain.");ntResult=null;ntTest().then(r=>{ntResult=r;main();toast(r.ok===true?"Phone alert bhej diya":"Phone alert: masla, neeche dekhein")})}
+  else if(a==="csv")csvDownload();
   else if(a==="cam")$("#ph1").click();
   else if(a==="gal")$("#ph2").click();
   else if(a==="rmph"){photo="";$("#prev").innerHTML=""}
@@ -422,7 +379,6 @@ addEventListener("storage",e=>{
   toast("Orders updated");if(tab==="orders")main();else badge();
 });
 setInterval(()=>{if(!ok())return;msPull().then(c=>{if(!c)return;checkNewOrders();if(tab==="orders"){main()}else badge()},()=>{})},15000);
-setInterval(()=>{if(!ok())return;supPull().then(g=>{if(tab==="support")supPaint();badge();if(g){const n=supNewest();ownerAlert("New support message"+(n?" from "+n.n:""),n?n.x.slice(0,80):"")}},()=>{})},12000);
 document.addEventListener("click",audioInit);
 if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))navigator.serviceWorker.register("sw.js").catch(()=>{});
 ok()?boot():lock();

@@ -12,7 +12,8 @@
 <meta property="og:description" content="Cricket bats, balls, footballs, gloves, helmets and more. Cash on Delivery across Pakistan.">
 <meta property="og:site_name" content="Malik Sports">
 <meta name="theme-color" content="#ffffff">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials">
+<link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Malik Sports">
@@ -120,6 +121,9 @@ window.MS_EMAIL = {
 <script>
 /* ============ OWNER ALERTS (ntfy): the same secret word must be in index.html and admin.html ============ */
 window.MS_NTFY = "malik-sports-akivmv6xef29q7w357";
+window.MS_HTTPS_URL = "https://maliksports.github.io/Malik-Sports/";   // the https address of your site (installing as an app works only on https)
+window.MS_FORCE_HTTPS = false;   // true = http par aane wale visitor apne aap https par chale jayenge. Pehle browser mein https:// wala address khol kar dekh lein ke wo khulta hai, phir true karein.
+try { if (window.MS_FORCE_HTTPS && location.protocol === "http:" && !/^(localhost|127\.|\[::1\])/.test(location.hostname)) location.replace("https://" + location.host + location.pathname + location.search + location.hash); } catch (e) {}
 /* ============ SHARED DATABASE: paste your Firebase database address between the quotes ============ */
 window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. https://malik-sports-default-rtdb.firebaseio.com
 /* ============ Do not edit below this line ============ */
@@ -194,11 +198,11 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
       <div class="relative">
         <button type="button" id="more-btn" data-act="more" aria-label="More options" aria-haspopup="true" aria-expanded="false" class="relative flex items-center justify-center w-11 h-11 rounded-xl hover:bg-surface-container transition-colors">
           <span class="material-symbols-outlined">more_vert</span>
-          <span id="sup-dot" hidden class="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-error"></span>
         </button>
         <div id="more-menu" hidden role="menu" class="absolute right-0 top-12 w-60 bg-surface rounded-xl shadow-2xl border border-surface-variant py-1 z-[70]">
-          <button type="button" role="menuitem" data-act="go" data-r="support" class="w-full flex items-center gap-space-sm px-space-md py-3 text-left text-body-sm font-bold hover:bg-surface-container"><span class="material-symbols-outlined text-[22px]">support_agent</span><span class="flex-1">Support</span><span id="sup-dot2" hidden class="w-2.5 h-2.5 rounded-full bg-error"></span></button>
+          <button type="button" role="menuitem" data-act="go" data-r="support" class="w-full flex items-center gap-space-sm px-space-md py-3 text-left text-body-sm font-bold hover:bg-surface-container"><span class="material-symbols-outlined text-[22px]">support_agent</span><span class="flex-1">Help &amp; Support</span></button>
           <button type="button" role="menuitem" data-act="go" data-r="track" class="w-full flex items-center gap-space-sm px-space-md py-3 text-left text-body-sm font-bold hover:bg-surface-container"><span class="material-symbols-outlined text-[22px]">local_shipping</span>Track order</button>
+          <button type="button" role="menuitem" id="install-item" data-act="install" class="w-full flex items-center gap-space-sm px-space-md py-3 text-left text-body-sm font-bold hover:bg-surface-container"><span class="material-symbols-outlined text-[22px]">install_mobile</span>Install app</button>
           <a role="menuitem" id="more-wa" href="#" target="_blank" rel="noopener" class="w-full flex items-center gap-space-sm px-space-md py-3 text-left text-body-sm font-bold hover:bg-surface-container"><span class="material-symbols-outlined text-[22px]">chat</span>WhatsApp</a>
         </div>
       </div>
@@ -364,7 +368,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     <!-- TRACK -->
     <section id="view-track" hidden class="w-full pt-space-md"><div id="track-body" class="max-w-2xl mx-auto flex flex-col gap-space-md"></div></section>
 
-    <!-- SUPPORT -->
+    <!-- HELP & SUPPORT -->
     <section id="view-support" hidden class="w-full pt-space-md"><div id="support-body" class="max-w-2xl mx-auto flex flex-col gap-space-md"></div></section>
 
     <!-- ORDER -->
@@ -537,7 +541,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
   /* ---------- Routing ---------- */
   var ROUTES = {
     home: { title: "Home", tab: "home" }, shop: { title: "Shop", tab: "shop" }, cart: { title: "Cart", tab: "cart" },
-    track: { title: "Track order", tab: "track" }, support: { title: "Support", tab: "support", stack: true },
+    track: { title: "Track order", tab: "track" }, support: { title: "Help & Support", tab: "support", stack: true },
     checkout: { title: "Checkout", tab: "cart", stack: true }, order: { title: "Order placed", tab: "shop", stack: true }, product: { title: "Product", tab: "shop", stack: true }
   };
   var cur = null, prev = null;
@@ -550,7 +554,6 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     $("#hdr-title").textContent = R.title;
     var mm = $("#more-menu"); if (mm) { mm.hidden = true; $("#more-btn").setAttribute("aria-expanded", "false"); }
     var mw = $("#more-wa"); if (mw) mw.href = waLink("Hi Malik Sports, I need some help.");
-    supDotUpdate(); if (r !== "support") setTimeout(supCheck, 900);
     $("#back-btn").hidden = !R.stack;
     $("#logo-mark").classList.toggle("hidden", !!R.stack);
     $("#logo-mark").classList.add("md:block");
@@ -606,7 +609,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     var lk = "text-body-sm text-on-surface-variant hover:text-on-surface transition-colors";
     $("#site-footer").innerHTML = '<div class="grid md:grid-cols-3 gap-space-lg">' +
       '<div><div class="font-headline-md text-[28px] uppercase tracking-wide leading-none">Malik Sports</div><p class="text-body-sm text-on-surface-variant mt-space-sm max-w-xs">Cricket, football and sports gear, delivered across Pakistan.</p></div>' +
-      '<div class="flex flex-col gap-space-xs"><span class="text-label-lg uppercase tracking-wider font-bold">Shop</span><a href="#shop" class="' + lk + '">All gear</a><a href="#track" class="' + lk + '">Track your order</a><a href="#support" class="' + lk + '">Support</a><a href="#cart" class="' + lk + '">Your cart</a></div>' +
+      '<div class="flex flex-col gap-space-xs"><span class="text-label-lg uppercase tracking-wider font-bold">Shop</span><a href="#shop" class="' + lk + '">All gear</a><a href="#track" class="' + lk + '">Track your order</a><a href="#support" class="' + lk + '">Help &amp; Support</a><a href="#cart" class="' + lk + '">Your cart</a><a href="#" data-act="install" id="install-foot" class="' + lk + '">Install app on your phone</a></div>' +
       '<div class="flex flex-col gap-space-xs"><span class="text-label-lg uppercase tracking-wider font-bold">Help</span><a href="' + waLink("Hi Malik Sports, I need some help.") + '" target="_blank" rel="noopener" class="' + lk + '">Chat on WhatsApp</a><span class="' + lk + '">Pay by Cash on Delivery, Easypaisa or JazzCash</span></div></div>' +
       '<p class="text-[12px] text-outline mt-space-lg">© ' + new Date().getFullYear() + ' Malik Sports. All rights reserved.</p>';
     $("#home-pills").innerHTML = '<div class="flex items-center gap-space-sm w-max">' + pills("none", "home") + '</div>';
@@ -796,124 +799,119 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
   }
 
   /* ---------- Render ---------- */
-  /* ---------- Support chat: customer writes here, the owner answers from admin.html ---------- */
-  var SUP_AUTO = "Assalam-o-Alaikum! Shukriya ke aap ne humein message kiya. Aap ko bohat jald aap ka jawab mil jayega. Meharbani karke apna masla tafseel se bayan kar dein.";
-  var SUP = { msgs: [], sig: "", busy: false, id: "", timer: null };
-  function lsGet(k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }
-  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
-  function supId() { var id = SUP.id || lsGet("ms-sup-id"); return /^c[a-z0-9]{20}$/.test(id) ? id : ""; }
-  function supNewId() {
-    var a = new Uint8Array(20), s = "c", i;
-    try { crypto.getRandomValues(a); } catch (e) { for (i = 0; i < 20; i++) a[i] = Math.floor(Math.random() * 256); }
-    for (i = 0; i < 20; i++) s += "abcdefghijklmnopqrstuvwxyz0123456789".charAt(a[i] % 36);
-    SUP.id = s; lsSet("ms-sup-id", s); return s;
-  }
-  function supFetch(id) {
-    return fetch(DB + "/support/" + id + "/m.json").then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function (j) {
-      var a = []; Object.keys(j || {}).sort().forEach(function (k) { var m = j[k]; if (m && typeof m.x === "string") a.push({ id: k, f: m.f, x: m.x, t: m.t }); }); return a;
-    });
-  }
-  function supPut(id, f, text, offset) {
-    var at = Date.now() + (offset || 0), mid = at.toString(36) + Math.random().toString(36).slice(2, 4);
-    return fetch(DB + "/support/" + id + "/m/" + mid + ".json", { method: "PUT", body: JSON.stringify({ f: f, x: text, t: new Date(at).toISOString() }) }).then(function (r) { if (!r.ok) throw new Error("send"); return mid; });
-  }
-  function supBubble(m) {
-    var me = m.f === "c", bot = m.f === "b", tm = m.t ? new Date(m.t).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";
-    return '<div class="flex ' + (me ? "justify-end" : "justify-start") + '"><div class="max-w-[84%] ' + (me ? "bg-secondary-container text-on-secondary rounded-2xl rounded-br-sm" : "bg-surface-container-high text-on-surface rounded-2xl rounded-bl-sm") + ' px-space-md py-2.5 shadow-sm">' +
-      '<div class="text-[11px] font-bold uppercase tracking-wider opacity-70 mb-0.5">' + (me ? "You" : bot ? "Malik Sports &middot; Auto reply" : "Malik Sports") + '</div>' +
-      '<div class="text-body-sm whitespace-pre-wrap break-words">' + esc(m.x) + '</div><div class="text-[11px] opacity-60 mt-1 text-right">' + tm + '</div></div></div>';
-  }
-  function supPaint(a, force) {
-    var box = $("#sup-msgs"); if (!box) return;
-    var sig = a.length + ":" + (a.length ? a[a.length - 1].id : "");
-    if (sig === SUP.sig && !force) return;
-    var grew = a.length > SUP.msgs.length || !SUP.sig;
-    SUP.sig = sig; SUP.msgs = a;
-    box.innerHTML = a.length ? a.map(supBubble).join("") :
-      '<div class="bg-surface-container rounded-xl p-space-lg text-center text-on-surface-variant"><span class="material-symbols-outlined text-[40px] text-tertiary">forum</span><p class="font-bold text-on-surface mt-1">Say hello!</p><p class="text-body-sm mt-1">Ask about a product, delivery, payment or your order. We reply here.</p></div>';
-    if (a.length) lsSet("ms-sup-seen", a[a.length - 1].id);
-    supDotUpdate();
-    if (grew && a.length) setTimeout(function () { window.scrollTo(0, document.body.scrollHeight); }, 30);
-  }
-  function supLoad(force) {
-    var id = supId();
-    if (!id || !LIVE) { supPaint([], force); return Promise.resolve(); }
-    return supFetch(id).then(function (a) { if (cur === "support") supPaint(a, force); }, function () { if (force) supPaint(SUP.msgs, true); });
-  }
-  function renderSupport() {
-    var root = $("#support-body");
-    if (!$("#sup-msgs")) {
-      var nm = lsGet("ms-sup-name");
-      root.innerHTML =
-        '<div class="bg-surface-container rounded-xl p-space-md shadow-md flex items-center gap-space-md"><span class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center shrink-0"><span class="material-symbols-outlined">support_agent</span></span>' +
-        '<div class="min-w-0"><h1 class="font-headline-sm text-[20px] uppercase leading-tight">Malik Sports Support</h1><p class="text-body-sm text-on-surface-variant">Write to us here. Come back to this page to read our reply. A red dot on the &#8942; menu shows when we have answered.</p>' +
-        '<button type="button" id="sup-notify" data-act="sup-notify" hidden class="mt-1 text-body-sm font-bold underline">Notify me when you reply</button></div></div>' +
-        (LIVE ? "" : '<div class="bg-surface-container rounded-xl p-space-md text-error text-body-sm">Chat is not available right now. Please message us on WhatsApp.</div>') +
-        '<div id="sup-msgs" class="flex flex-col gap-space-sm min-h-[30vh]" role="log" aria-live="polite"></div>' +
-        '<div id="sup-form" class="sticky bottom-3 bg-surface rounded-xl p-space-sm shadow-2xl border border-surface-variant flex flex-col gap-space-xs">' +
-          (nm ? "" : '<input id="sup-name" type="text" maxlength="40" autocomplete="name" placeholder="Your name" class="' + INP + ' !mt-0">') +
-          '<div class="flex gap-space-xs items-end"><textarea id="sup-text" rows="2" maxlength="600" placeholder="Type your message…" class="' + INP + ' !mt-0 flex-1 resize-none"></textarea>' +
-          '<button type="button" data-act="sup-send" aria-label="Send message" class="bg-secondary-container text-on-secondary w-12 h-12 rounded-xl flex items-center justify-center shrink-0"><span class="material-symbols-outlined">send</span></button></div>' +
-          '<p id="sup-err" class="text-error text-[12px] min-h-[1em]" role="alert"></p></div>';
-      SUP.sig = ""; SUP.msgs = [];
-    }
-    supNotifyBtn(); supLoad(true);
-    if (!SUP.timer) SUP.timer = setInterval(function () { if (cur === "support" && !document.hidden) supLoad(false); }, 5000);
-  }
-  function supSend() {
-    var ta = $("#sup-text"), nmEl = $("#sup-name"), er = $("#sup-err"); if (!ta) return;
-    var text = ta.value.trim(), name = nmEl ? nmEl.value.trim() : lsGet("ms-sup-name");
-    if (!LIVE) { er.textContent = "Chat is not available right now. Please use WhatsApp."; return; }
-    if (!name) { er.textContent = "Please enter your name."; nmEl && nmEl.focus(); return; }
-    if (!text) { er.textContent = "Type a message first."; ta.focus(); return; }
-    if (SUP.busy) return; SUP.busy = true; er.textContent = "";
-    var id = supId() || supNewId(), last = SUP.msgs[SUP.msgs.length - 1];
-    var needBot = !last || !last.t || Date.now() - new Date(last.t).getTime() > 6 * 3600 * 1000;
-    var named = lsGet("ms-sup-named") === id;
-    var pre = named ? Promise.resolve() : fetch(DB + "/support/" + id + "/n.json", { method: "PUT", body: JSON.stringify(name.slice(0, 40)) }).then(function (r) { if (r.ok || r.status === 401) lsSet("ms-sup-named", id); }).catch(function () {});
-    pre.then(function () { return supPut(id, "c", text.slice(0, 600)); })
-      .then(function () {
-        msNotify("New support message", name.split(" ")[0].slice(0, 20) + " wrote in Support. Open admin.html to reply.", 4, "speech_balloon");
-        lsSet("ms-sup-name", name); ta.value = ""; if (nmEl) nmEl.remove();
-        if (needBot) return supPut(id, "b", SUP_AUTO, 1500).catch(function () {});
-      })
-      .then(function () { return supLoad(true); })
-      .catch(function () { er.textContent = "Could not send. Check your internet and try again."; })
-      .then(function () { SUP.busy = false; });
-  }
-  /* Phone alert for the owner through ntfy.sh (free). Only order number, amount or first name are sent, never addresses or message text. */
+  /* Phone alert for the owner through ntfy.sh (free). Only order number and amount are sent, never name, address or phone. */
   function msNotify(title, text, prio, tag) {
     var tp = String(window.MS_NTFY || ""); if (!/^[A-Za-z0-9_-]{8,64}$/.test(tp)) return;
     var admin = location.origin + location.pathname.replace(/[^\/]*$/, "") + "admin.html";
-    try { fetch("https://ntfy.sh/" + tp + "?title=" + encodeURIComponent(title) + "&priority=" + (prio || 4) + "&tags=" + (tag || "bell") + "&click=" + encodeURIComponent(admin), { method: "POST", mode: "no-cors", body: text }).catch(function () {}); } catch (e) {}
+    var url = "https://ntfy.sh/" + tp + "?title=" + encodeURIComponent(title) + "&priority=" + (prio || 4) + "&tags=" + (tag || "bell") + "&click=" + encodeURIComponent(admin);
+    /* keepalive: the alert still goes even if the customer closes the page right away; if the network fails it tries again twice */
+    var send = function (n) { try { fetch(url, { method: "POST", mode: "no-cors", keepalive: true, body: text }).catch(function () { if (n < 2) setTimeout(function () { send(n + 1); }, 5000 * (n + 1)); }); } catch (e) {} };
+    send(0);
   }
-  /* Browser alert for the customer when the owner replies (works while the shop is open in a tab). */
-  function supBrowserNotify(title, body) {
-    if (!("Notification" in window) || Notification.permission !== "granted") return;
-    var o = { body: body, icon: "icon-192.png", tag: "ms-support", vibrate: [150, 80, 150] };
-    var fb = function () { try { new Notification(title, o); } catch (e) {} };
-    if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) navigator.serviceWorker.getRegistration().then(function (r) { if (r && r.showNotification) r.showNotification(title, o); else fb(); }).catch(fb); else fb();
+
+  /* ---------- Install as an app (works on https only; on http we send the customer to the https link) ---------- */
+  var DEFERRED = null, HTTPS_URL = String(window.MS_HTTPS_URL || "");
+  function isApp() { try { return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (e) { return false; } }
+  function installRefresh() { ["#install-item", "#install-foot"].forEach(function (s) { var e = $(s); if (e) e.hidden = isApp(); }); }
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); DEFERRED = e; });
+  window.addEventListener("appinstalled", function () { DEFERRED = null; installRefresh(); toast("App installed. Open it from your home screen."); });
+  function installSheet(html) {
+    var old = $("#install-sheet"); if (old) old.remove();
+    var d = document.createElement("div"); d.id = "install-sheet"; d.setAttribute("role", "dialog"); d.setAttribute("aria-modal", "true");
+    d.className = "fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/50";
+    d.innerHTML = '<div class="w-full md:max-w-md bg-surface rounded-t-2xl md:rounded-2xl p-space-lg shadow-2xl max-h-[88vh] overflow-auto"><h2 class="font-headline-sm text-[24px] uppercase mb-space-sm">Install Malik Sports app</h2><div class="text-body-sm text-on-surface-variant leading-relaxed">' + html + '</div><button type="button" data-act="install-close" class="w-full mt-space-md border border-surface-variant font-bold py-3 rounded-xl">Close</button></div>';
+    document.body.appendChild(d);
   }
-  function supNotifyBtn() {
-    var b = $("#sup-notify"); if (!b) return;
-    b.hidden = !("Notification" in window) || Notification.permission !== "default";
+  function doInstall() {
+    var mn = $("#more-menu"); if (mn) { mn.hidden = true; $("#more-btn").setAttribute("aria-expanded", "false"); }
+    if (isApp()) { toast("The app is already installed."); return; }
+    if (DEFERRED) { var p = DEFERRED; DEFERRED = null; try { p.prompt(); } catch (e) {} return; }
+    var ua = navigator.userAgent || "", ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var secure = location.protocol === "https:" || location.hostname === "localhost";
+    var same = HTTPS_URL && location.href.indexOf(HTTPS_URL) === 0;
+    if (ios) installSheet('<ol class="list-decimal pl-5 space-y-1"><li>Open this shop in <b>Safari</b>.</li><li>Tap the <b>Share</b> button (square with an arrow).</li><li>Tap <b>Add to Home Screen</b>, then <b>Add</b>.</li></ol>');
+    else if (!secure) {
+      var own = "https://" + location.host + "/";
+      installSheet('<p>Chrome installs an app only from a <b>secure (https)</b> address. Ye address <b>http</b> hai, is liye install ka button yahan band hai.</p><p class="mt-2"><b>Karna kya hai:</b> neeche pehla button dabayein. Agar wo khul jaye (taala/lock nazar aaye) to wahan menu dobara kholein aur <b>Install app</b> dabayein.</p><a href="' + own + '" class="block text-center mt-space-md bg-secondary-container text-on-secondary font-bold py-3 rounded-xl">1) Isi address ka https version kholein</a><p class="mt-1 text-[12px] break-all">' + own + '</p>' +
+        (HTTPS_URL && !same ? '<p class="mt-3">Agar wo na khule to ye dusra link:</p><a href="' + HTTPS_URL + '" class="block text-center mt-1 border border-surface-variant font-bold py-3 rounded-xl">2) Open the install link</a><p class="mt-1 text-[12px] break-all">' + HTTPS_URL + '</p>' : ''));
+    }
+    else installSheet('<p>In Chrome tap the <b>&#8942; menu</b> (top right) and choose <b>Install app</b> or <b>Add to Home screen</b>.</p><p class="mt-2">Agar ye option nahi dikhta: page refresh karke 10 second ruk kar dobara dekhein, aur Chrome ko update karein. Agar app pehle se install hai to use home screen se kholein.</p>');
   }
-  function supDotUpdate() {
-    var on = !!SUP.unread && cur !== "support";
-    ["#sup-dot", "#sup-dot2"].forEach(function (s) { var e = $(s); if (e) e.hidden = !on; });
+  document.addEventListener("click", function (e) { if (e.target && e.target.id === "install-sheet") e.target.remove(); });
+  setTimeout(installRefresh, 400);
+
+  /* ---------- Help & Support: common problems and their answers (tap a problem to see the answer) ---------- */
+  /* To add or change a problem: edit the lines inside FAQ below. Each line is  ["Problem title", "Answer"].  */
+  function faqWa(t) { return '<a href="' + waLink(t) + '" target="_blank" rel="noopener" class="inline-flex items-center gap-1 mt-2 bg-secondary-container text-on-secondary font-bold text-body-sm px-space-md py-2 rounded-lg"><span class="material-symbols-outlined text-[18px]">chat</span>Message us on WhatsApp</a>'; }
+  function faqGo(r, label) { return '<button type="button" data-act="go" data-r="' + r + '" class="inline-flex items-center gap-1 mt-2 mr-2 border border-surface-variant font-bold text-body-sm px-space-md py-2 rounded-lg hover:bg-surface-container">' + label + '</button>'; }
+  var FAQ = [
+    { t: "Placing an order", i: "shopping_bag", q: [
+      ["I cannot place my order (Order nahi ho raha)", "Look for the <b>red message</b> above the Place Order button. It tells you what is missing. Please fill your name, mobile number, email, address and city. If you pay by Easypaisa or JazzCash, the <b>transaction ID</b> is also needed.<br><i>Urdu: Button ke upar laal likhai parhein, wahan likha hota hai kya reh gaya hai.</i>"],
+      ["It says \"Enter a valid mobile number\"", "Write your mobile number like <b>03XX XXXXXXX</b> (11 digits) or <b>+92 3XX XXXXXXX</b>. Do not write a landline number or extra letters."],
+      ["It says \"Enter a valid email address\"", "Your email must look like <b>name@gmail.com</b>. We send your order updates to this email. Check there is no space and no missing @ sign."],
+      ["I added items but my cart is empty now", "Your cart is saved on the same phone and browser you used. It is lost if you used a private tab, cleared your browser data, or opened the shop on another phone. Please add the items again."],
+      ["The price is different from before", "Prices can change when the shop updates them. Your cart always shows the <b>current</b> price. Please check the total before you place the order."],
+      ["I cannot find a product", "Open <b>Shop</b>, type the name in the search box, or use the category buttons and <b>Sort</b>. If it is not there, ask us, we may be able to get it." + "@@WA_FIND@@"]
+    ] },
+    { t: "Payment", i: "payments", q: [
+      ["How can I pay? (Payment kaise karun?)", "You can choose <b>Cash on Delivery</b> (pay the rider when the parcel arrives), <b>Easypaisa</b> or <b>JazzCash</b>."],
+      ["Where do I send my Easypaisa / JazzCash money?", "Choose Easypaisa or JazzCash at checkout. The page shows the <b>exact amount</b> and our <b>number</b>. Send the money from your app, then type the <b>transaction ID</b> (from the app or SMS) in the box and place the order.<br>Easypaisa: <b>@@EP@@</b> &nbsp; JazzCash: <b>@@JC@@</b>"],
+      ["I sent the money but I got no confirmation", "Your order is saved as soon as you place it, and you see an order page with your <b>order number</b>. We also email you, so please check your <b>Spam</b> folder. We confirm paid orders by call or message. Keep your transaction ID and message us if it takes long." + "@@WA_PAID@@"],
+      ["I made a mistake in the transaction ID", "Please message us with your <b>order number</b> and the correct transaction ID, and we will fix it." + "@@WA_TID@@"]
+    ] },
+    { t: "Voucher codes", i: "sell", q: [
+      ["Where do I enter my voucher code?", "Open your <b>Cart</b>. Type the code in the <b>Voucher code</b> box and tap <b>Apply</b>. The discount shows in your total." + "@@GO_CART@@"],
+      ["It says \"That voucher code is not valid\"", "Check the spelling and type it exactly as given. Remove extra spaces. Some vouchers do not work on every product, so try with a different item in the cart. Ask us if you are sure the code is right."],
+      ["It says \"This voucher has expired\"", "Every voucher has a last day. This one is finished. Please ask us if a new code is available." + "@@WA_VOUCHER@@"]
+    ] },
+    { t: "Delivery", i: "local_shipping", q: [
+      ["How much is delivery and how long does it take?", "<b>Standard</b>: @@STD@@, arrives in 4 to 6 working days. <b>Express</b>: @@EXP@@, arrives in 2 to 4 working days. Delivery is <b>free</b> on orders over @@FREE@@."],
+      ["My order is late (Order late ho gaya)", "Open <b>Track order</b> and see the status. If it says <b>Waiting for confirmation</b>, we have not confirmed it yet, so please message us. If it says <b>On the way</b>, the rider will call you, so keep your phone on." + "@@TRACK@@" + "@@WA_LATE@@"],
+      ["I entered a wrong address or phone number", "Please message us <b>right away</b> with your order number and the correct address and phone number." + "@@WA_ADDR@@"],
+      ["The rider could not reach me", "Keep the phone number you gave us switched on. If you missed the call, message us with your order number and we will arrange the delivery again." + "@@WA_RIDER@@"]
+    ] },
+    { t: "Tracking my order", i: "pin_drop", q: [
+      ["How do I track my order?", "Open the <b>&#8942; menu</b> and tap <b>Track order</b> (or use the Track button below). Enter your <b>order number</b> (like MS-AB12CD) and the <b>mobile number</b> you used. The steps are: Waiting for confirmation, Confirmed, On the way, Delivered." + "@@TRACK@@"],
+      ["I do not know my order number", "It is shown on the order page right after you order, and it is in your confirmation email (look in Spam too). It starts with <b>MS-</b>. If you cannot find it, message us your name and phone number." + "@@WA_NUM@@"],
+      ["Tracking says \"We could not find your order\"", "Check the order number (letters and numbers, starts with MS-) and use the <b>same mobile number</b> you gave when ordering. Check your internet and try again after a minute. If it still fails, message us." + "@@WA_TRK@@"]
+    ] },
+    { t: "Problems with my parcel", i: "inventory_2", q: [
+      ["I want to cancel or change my order", "Message us as soon as possible with your <b>order number</b> and what you want to change. Orders can usually be changed before they are dispatched (before the status says On the way)." + "@@WA_CHG@@"],
+      ["The item is damaged or wrong", "We are sorry. Take clear <b>photos</b> of the item and the parcel, and message us with your <b>order number</b>. We offer easy exchange with a 30-day guarantee." + "@@WA_BAD@@"],
+      ["How does exchange work?", "Your gear comes with a <b>30-day guarantee</b>. Message us with your order number and tell us what is wrong, and we will guide you step by step." + "@@WA_EX@@"]
+    ] },
+    { t: "The website", i: "language", q: [
+      ["The page is blank, slow or not loading", "1. Check your internet. 2. Refresh the page. 3. Open the shop in <b>Chrome</b>. 4. Clear the browser cache or open it in a new tab. 5. Try again after a few minutes. If it still fails, message us what you see." + "@@WA_WEB@@"],
+      ["A button does not work or the page looks broken", "Refresh the page (on a computer press <b>Ctrl + F5</b>). Update your browser. If the problem stays, send us a screenshot." + "@@WA_BTN@@"]
+    ] }
+  ];
+  function faqFix(a) {
+    var w = function (t) { return faqWa(t); };
+    var m = { "@@WA_FIND@@": w("Hi Malik Sports, I cannot find a product."), "@@WA_PAID@@": w("Hi Malik Sports, I paid but did not get a confirmation."), "@@WA_TID@@": w("Hi Malik Sports, I need to correct my transaction ID."),
+      "@@WA_VOUCHER@@": w("Hi Malik Sports, my voucher has expired. Is there a new code?"), "@@WA_LATE@@": w("Hi Malik Sports, my order is late."), "@@WA_ADDR@@": w("Hi Malik Sports, I need to correct my address or phone number."),
+      "@@WA_RIDER@@": w("Hi Malik Sports, the rider could not reach me."), "@@WA_NUM@@": w("Hi Malik Sports, I do not know my order number."), "@@WA_TRK@@": w("Hi Malik Sports, tracking cannot find my order."),
+      "@@WA_CHG@@": w("Hi Malik Sports, I want to change or cancel my order."), "@@WA_BAD@@": w("Hi Malik Sports, my item is damaged or wrong."), "@@WA_EX@@": w("Hi Malik Sports, I want to exchange an item."),
+      "@@WA_WEB@@": w("Hi Malik Sports, the website is not loading for me."), "@@WA_BTN@@": w("Hi Malik Sports, something on the website does not work."),
+      "@@TRACK@@": faqGo("track", "Track my order"), "@@GO_CART@@": faqGo("cart", "Go to my cart"),
+      "@@EP@@": PAY.easypaisa.no, "@@JC@@": PAY.jazzcash.no, "@@STD@@": money(STANDARD), "@@EXP@@": money(EXPRESS), "@@FREE@@": money(FREE_AT) };
+    Object.keys(m).forEach(function (k) { a = a.split(k).join(m[k]); });
+    return a;
   }
-  function supCheck() {
-    var id = supId(); if (!id || !LIVE || cur === "support" || document.hidden || Date.now() - (SUP.checked || 0) < 8000) return;
-    SUP.checked = Date.now();
-    supFetch(id).then(function (a) {
-      var l = a[a.length - 1]; SUP.unread = !!l && l.f === "a" && l.id > lsGet("ms-sup-seen"); supDotUpdate();
-      if (SUP.unread && l.id !== lsGet("ms-sup-notified")) { lsSet("ms-sup-notified", l.id); supBrowserNotify("Malik Sports replied", "Open Support to read our answer."); }
-    }, function () {});
+  function renderSupport() {
+    var root = $("#support-body"), h = '';
+    h += '<div class="bg-surface-container rounded-xl p-space-md shadow-md flex items-center gap-space-md"><span class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center shrink-0"><span class="material-symbols-outlined">support_agent</span></span>' +
+      '<div class="min-w-0"><h1 class="font-headline-sm text-[20px] uppercase leading-tight">Help &amp; Support</h1><p class="text-body-sm text-on-surface-variant">Having a problem? Tap it below to see the answer. (Masla dabayein, hal khul jayega.)</p></div></div>';
+    FAQ.forEach(function (g) {
+      h += '<div><h2 class="flex items-center gap-space-xs font-bold uppercase tracking-wider text-label-md text-on-surface-variant mb-space-xs"><span class="material-symbols-outlined text-[20px] text-tertiary">' + g.i + '</span>' + g.t + '</h2><div class="flex flex-col gap-space-xs">';
+      g.q.forEach(function (x) {
+        h += '<details class="group bg-surface-container rounded-xl overflow-hidden"><summary class="flex items-center justify-between gap-space-sm px-space-md py-3 cursor-pointer font-bold text-body-sm list-none"><span>' + x[0] + '</span><span class="material-symbols-outlined text-[22px] shrink-0 transition-transform group-open:rotate-180">expand_more</span></summary>' +
+          '<div class="px-space-md pb-space-md text-body-sm text-on-surface-variant leading-relaxed border-t border-surface-variant pt-space-sm">' + faqFix(x[1]) + '</div></details>';
+      });
+      h += '</div></div>';
+    });
+    h += '<div class="bg-surface-container rounded-xl p-space-md text-center"><p class="font-bold">Still need help? (Phir bhi masla hai?)</p><p class="text-body-sm text-on-surface-variant mt-1">Write to us on WhatsApp and we will help you.</p>' + faqWa("Hi Malik Sports, I need some help.") + '</div>';
+    root.innerHTML = h;
   }
-  document.addEventListener("click", function (e) { var mn = $("#more-menu"); if (mn && !mn.hidden && !e.target.closest("#more-btn")) { mn.hidden = true; $("#more-btn").setAttribute("aria-expanded", "false"); } });
-  document.addEventListener("keydown", function (e) { if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && e.target && e.target.id === "sup-text") supSend(); if (e.key === "Escape") { var mn = $("#more-menu"); if (mn) mn.hidden = true; } });
-  setTimeout(supCheck, 2500); setInterval(supCheck, 30000);
-  document.addEventListener("visibilitychange", function () { if (!document.hidden) supCheck(); });
 
   var RENDER = { home: renderHome, shop: renderShop, track: renderTrack, support: renderSupport, cart: renderCart, checkout: renderCheckout, order: renderOrder, product: renderProduct };
   /* ---------- Product page: opens when a product card is tapped ---------- */
@@ -1005,9 +1003,9 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
       }
       case "track-go": doTrack(); break;
       case "track-order": { var co = orders().filter(function (x) { return x.id === ui.orderId; })[0]; if (co) { ui.trackId = co.id; ui.trackPhone = co.customer.phone; } go("track"); break; }
+      case "install": e.preventDefault(); doInstall(); break;
+      case "install-close": { var sh = $("#install-sheet"); if (sh) sh.remove(); break; }
       case "more": { var mn = $("#more-menu"); mn.hidden = !mn.hidden; t.setAttribute("aria-expanded", String(!mn.hidden)); break; }
-      case "sup-send": supSend(); break;
-      case "sup-notify": try { Notification.requestPermission().then(function (p) { supNotifyBtn(); if (p === "granted") toast("We will notify you when we reply"); }); } catch (e) {} break;
       case "soon": toast(t.dataset.msg || "That part is not available yet."); break;
     }
   });
