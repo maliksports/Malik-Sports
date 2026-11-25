@@ -17,6 +17,10 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Malik Sports">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="application-name" content="Malik Sports">
+<script>/* opened from the home screen = app mode (the shop then hides website-only parts and shows a splash) */try{if((window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true)document.documentElement.classList.add("is-app");}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&display=swap">
@@ -78,6 +82,19 @@ button, a { -webkit-tap-highlight-color: transparent; }
 #toast { bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)); }
 @media (min-width: 768px) { #toast { bottom: calc(2rem + env(safe-area-inset-bottom, 0px)); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+/* App mode: when the shop is opened from the home screen it should feel like an app, not a website. */
+#boot-splash { display: none; }
+.is-app #boot-splash { display: flex; position: fixed; inset: 0; z-index: 300; background: #ffffff; align-items: center; justify-content: center; flex-direction: column; gap: 18px; transition: opacity .3s ease; }
+.is-app #boot-splash.out { opacity: 0; pointer-events: none; }
+#boot-splash .bs-name { font-family: Anton, Impact, "Arial Narrow Bold", sans-serif; font-size: 30px; letter-spacing: .06em; text-transform: uppercase; color: #111111; }
+#boot-splash .bs-bar { width: 56px; height: 4px; border-radius: 4px; background: #e0e0e0; overflow: hidden; }
+#boot-splash .bs-bar::after { content: ""; display: block; width: 40%; height: 100%; background: #000000; border-radius: 4px; animation: bs-run 1s ease-in-out infinite; }
+@keyframes bs-run { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+.is-app #site-footer, .is-app #install-item, .is-app .install-banner { display: none !important; }
+.is-app a, .is-app button, .is-app img { -webkit-touch-callout: none; -webkit-user-drag: none; }
+html.is-app { overscroll-behavior: none; }
+.is-app #wa-float { bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px)); }
+@media (min-width: 768px) { .is-app #wa-float { bottom: 2rem; } }
 </style>
 
 <style>[hidden]{display:none!important}</style>
@@ -174,6 +191,8 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
 </script>
 </head>
 <body>
+<div id="boot-splash" aria-hidden="true"><svg width="88" height="88" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#000000"/><path d="M7 24V9l9 9 9-9v15" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/></svg><div class="bs-name">Malik Sports</div><div class="bs-bar"></div></div>
+<script>setTimeout(function(){var s=document.getElementById("boot-splash");if(s)s.remove();},6000);</script>
 <header id="app-header" class="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl" style="padding-top:env(safe-area-inset-top,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))">
   <div class="wrap h-16 flex items-center justify-between gap-space-md">
     <div class="flex items-center gap-space-sm min-w-0">
@@ -215,6 +234,14 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
 
     <!-- HOME -->
     <section id="view-home" hidden class="flex flex-col w-full pt-space-md">
+      <div class="install-banner" hidden>
+      <div class="flex items-center gap-space-sm bg-secondary-container text-on-secondary rounded-xl p-space-sm mb-space-md">
+        <img src="icon-192.png" alt="" width="40" height="40" class="w-10 h-10 rounded-lg shrink-0">
+        <div class="flex-1 min-w-0 leading-tight"><div class="font-bold text-body-sm truncate">Get the Malik Sports app</div><div class="text-[12px] opacity-75">Faster, full screen, one tap from your home screen</div></div>
+        <button type="button" data-act="install" class="shrink-0 bg-white text-black font-bold text-label-md uppercase tracking-wider px-3 py-2 rounded-lg active:scale-95 transition-transform">Install</button>
+        <button type="button" data-act="install-dismiss" aria-label="Not now" class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center opacity-75 hover:opacity-100"><span class="material-symbols-outlined text-[20px]">close</span></button>
+      </div>
+    </div>
       <div class="relative w-full rounded-2xl overflow-hidden bg-surface-container-lowest p-gutter md:p-12 flex flex-col justify-end min-h-[320px] md:min-h-[440px] mb-space-lg shadow-xl" style="background-image:radial-gradient(120% 90% at 85% 12%,rgba(0,0,0,.08),transparent 55%),linear-gradient(180deg,#ffffff,#f1f1f1)">
         <div id="hero-art" class="absolute right-[-14px] top-3 md:right-10 md:top-8 w-64 md:w-[28rem] pointer-events-none" aria-hidden="true"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/60 to-transparent"></div>
@@ -243,6 +270,14 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
 
     <!-- SHOP -->
     <section id="view-shop" hidden class="flex flex-col w-full pt-space-md">
+      <div class="install-banner" hidden>
+      <div class="flex items-center gap-space-sm bg-secondary-container text-on-secondary rounded-xl p-space-sm mb-space-md">
+        <img src="icon-192.png" alt="" width="40" height="40" class="w-10 h-10 rounded-lg shrink-0">
+        <div class="flex-1 min-w-0 leading-tight"><div class="font-bold text-body-sm truncate">Get the Malik Sports app</div><div class="text-[12px] opacity-75">Faster, full screen, one tap from your home screen</div></div>
+        <button type="button" data-act="install" class="shrink-0 bg-white text-black font-bold text-label-md uppercase tracking-wider px-3 py-2 rounded-lg active:scale-95 transition-transform">Install</button>
+        <button type="button" data-act="install-dismiss" aria-label="Not now" class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center opacity-75 hover:opacity-100"><span class="material-symbols-outlined text-[20px]">close</span></button>
+      </div>
+    </div>
       <div class="flex flex-col gap-space-md mb-space-lg">
         <div class="flex items-center justify-between gap-space-md">
           <div>
@@ -813,8 +848,12 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
   var DEFERRED = null, HTTPS_URL = String(window.MS_HTTPS_URL || "");
   function isApp() { try { return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (e) { return false; } }
   function installRefresh() { ["#install-item", "#install-foot"].forEach(function (s) { var e = $(s); if (e) e.hidden = isApp(); }); }
-  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); DEFERRED = e; });
-  window.addEventListener("appinstalled", function () { DEFERRED = null; installRefresh(); toast("App installed. Open it from your home screen."); });
+  /* Small "Get the app" card on Home and Shop. Shown only when this browser can install the app (or on iPhone), and hidden for 7 days after the customer closes it. */
+  function bannerOff() { try { return Date.now() < Number(localStorage.getItem("ms-install-dismissed") || 0); } catch (e) { return false; } }
+  function isIos() { var ua = navigator.userAgent || ""; return /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); }
+  function bannerRefresh() { var show = !isApp() && !bannerOff() && (!!DEFERRED || isIos()); document.querySelectorAll(".install-banner").forEach(function (b) { b.hidden = !show; }); }
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); DEFERRED = e; bannerRefresh(); });
+  window.addEventListener("appinstalled", function () { DEFERRED = null; installRefresh(); bannerRefresh(); toast("App installed. Open it from your home screen."); });
   function installSheet(html) {
     var old = $("#install-sheet"); if (old) old.remove();
     var d = document.createElement("div"); d.id = "install-sheet"; d.setAttribute("role", "dialog"); d.setAttribute("aria-modal", "true");
@@ -825,7 +864,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
   function doInstall() {
     var mn = $("#more-menu"); if (mn) { mn.hidden = true; $("#more-btn").setAttribute("aria-expanded", "false"); }
     if (isApp()) { toast("The app is already installed."); return; }
-    if (DEFERRED) { var p = DEFERRED; DEFERRED = null; try { p.prompt(); } catch (e) {} return; }
+    if (DEFERRED) { var p = DEFERRED; DEFERRED = null; bannerRefresh(); try { p.prompt(); } catch (e) {} return; }
     var ua = navigator.userAgent || "", ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     var secure = location.protocol === "https:" || location.hostname === "localhost";
     var same = HTTPS_URL && location.href.indexOf(HTTPS_URL) === 0;
@@ -838,7 +877,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     else installSheet('<p>In Chrome tap the <b>&#8942; menu</b> (top right) and choose <b>Install app</b> or <b>Add to Home screen</b>.</p><p class="mt-2">Agar ye option nahi dikhta: page refresh karke 10 second ruk kar dobara dekhein, aur Chrome ko update karein. Agar app pehle se install hai to use home screen se kholein.</p>');
   }
   document.addEventListener("click", function (e) { if (e.target && e.target.id === "install-sheet") e.target.remove(); });
-  setTimeout(installRefresh, 400);
+  setTimeout(function () { installRefresh(); bannerRefresh(); }, 400);
 
   /* ---------- Help & Support: common problems and their answers (tap a problem to see the answer) ---------- */
   /* To add or change a problem: edit the lines inside FAQ below. Each line is  ["Problem title", "Answer"].  */
@@ -1004,6 +1043,7 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
       case "track-go": doTrack(); break;
       case "track-order": { var co = orders().filter(function (x) { return x.id === ui.orderId; })[0]; if (co) { ui.trackId = co.id; ui.trackPhone = co.customer.phone; } go("track"); break; }
       case "install": e.preventDefault(); doInstall(); break;
+      case "install-dismiss": try { localStorage.setItem("ms-install-dismissed", String(Date.now() + 7 * 864e5)); } catch (x) {} bannerRefresh(); break;
       case "install-close": { var sh = $("#install-sheet"); if (sh) sh.remove(); break; }
       case "more": { var mn = $("#more-menu"); mn.hidden = !mn.hidden; t.setAttribute("aria-expanded", String(!mn.hidden)); break; }
       case "soon": toast(t.dataset.msg || "That part is not available yet."); break;
@@ -1023,6 +1063,13 @@ window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. htt
     else if (e.key === "ms-vouchers-pk" && cur === "cart") refresh();
   });
   render();
+  /* App mode: keep the splash up until the fonts and icons are ready, so the customer never sees plain unstyled text. */
+  (function () {
+    var sp = document.getElementById("boot-splash"); if (!sp) return;
+    var gone = false, hide = function () { if (gone) return; gone = true; sp.classList.add("out"); setTimeout(function () { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 350); };
+    try { Promise.all([document.fonts.load('24px "Material Symbols Outlined"'), document.fonts.load("20px Anton")]).then(function () { setTimeout(hide, 120); }, hide); } catch (e) { hide(); }
+    setTimeout(hide, 2500);
+  })();
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(function () {});
 })();
 </script>

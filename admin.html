@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Malik Controller</title>
 <meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#131317">
+<link rel="manifest" href="admin.webmanifest" crossorigin="use-credentials">
+<link rel="icon" type="image/png" href="admin-192.png">
+<link rel="apple-touch-icon" href="admin-apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MS Admin">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="application-name" content="MS Admin">
+<script>/* opened from the home screen = app mode (dark splash, stays signed in) */try{if((window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true)document.documentElement.classList.add("is-app");}catch(e){}</script>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&display=swap">
 <style>
@@ -51,6 +61,19 @@ textarea{resize:vertical}
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:var(--acc);color:var(--ink);font-weight:700;padding:12px 20px;border-radius:12px;transition:.25s;pointer-events:none}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* App mode + install sheet */
+#boot-splash{display:none}
+.is-app #boot-splash{display:flex;position:fixed;inset:0;z-index:300;background:#131317;align-items:center;justify-content:center;flex-direction:column;gap:18px;transition:opacity .3s}
+.is-app #boot-splash.out{opacity:0;pointer-events:none}
+#boot-splash .bs-name{font-family:Anton,Impact,sans-serif;font-size:28px;letter-spacing:.06em;text-transform:uppercase;color:#e4e1e7}
+#boot-splash .bs-bar{width:56px;height:4px;border-radius:4px;background:#2a292e;overflow:hidden}
+#boot-splash .bs-bar::after{content:"";display:block;width:40%;height:100%;background:#00fe66;border-radius:4px;animation:bs-run 1s ease-in-out infinite}
+@keyframes bs-run{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+html.is-app{overscroll-behavior:none}
+.is-app a,.is-app button,.is-app img{-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#install-sheet{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+#install-sheet .box{width:100%;max-width:28rem;background:var(--panel);border-radius:16px 16px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
+@media(min-width:700px){#install-sheet{align-items:center}#install-sheet .box{border-radius:16px}}
 </style>
 <script>
 /* ============ EMAIL SETUP: paste your 3 EmailJS values between the quotes ============ */
@@ -93,6 +116,7 @@ window.MS_EMAIL = {
 /* ============ OWNER ALERTS (ntfy): the same secret word must be in index.html and admin.html ============ */
 window.MS_NTFY = "malik-sports-akivmv6xef29q7w357";
 window.MS_HTTPS_URL = "https://maliksports.github.io/Malik-Sports/";   // the https address of your site (installing as an app works only on https)
+window.MS_ADMIN_URL = "https://maliksports.github.io/Malik-Sports/admin.html";   // admin app yahin se install hoti hai. Shop aur admin ek hi address par hon to Chrome dono ko ek hi app maanta hai ("already installed"), isliye admin ka address shop se ALAG rakhein. Khali ("") karein to isi address se install hogi.
 window.MS_FORCE_HTTPS = false;   // true = http par aane wale visitor apne aap https par chale jayenge. Pehle browser mein https:// wala address khol kar dekh lein ke wo khulta hai, phir true karein.
 try { if (window.MS_FORCE_HTTPS && location.protocol === "http:" && !/^(localhost|127\.|\[::1\])/.test(location.hostname)) location.replace("https://" + location.host + location.pathname + location.search + location.hash); } catch (e) {}
 /* ============ SHARED DATABASE: paste your 2 Firebase values between the quotes ============ */
@@ -103,7 +127,10 @@ window.MS_KEY = "AIzaSyCKHqm-_cjIxPJp403wB-1A8g5nF43P_GY";   // e.g. AIzaSy...
   var DB = String(window.MS_DB || "").replace(/\/+$/, ""), KEY = String(window.MS_KEY || "");
   var ready = DB.indexOf("https://") === 0 && KEY && KEY.indexOf("PASTE") < 0;
   var raw = Storage.prototype.setItem, snap = {}, S = null;
-  try { S = JSON.parse(sessionStorage.getItem("ms-fb")); } catch (e) {}
+  /* Browser tab: you sign in again every visit. Installed app: stays signed in until you press Lock. */
+  var APP = false; try { APP = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (e) {}
+  var STORE = APP ? localStorage : sessionStorage; window.msStore = STORE; window.msApp = APP;
+  try { S = JSON.parse(STORE.getItem("ms-fb")); } catch (e) {}
   var DEFAULTS = [
 {id:"beast",name:"Beast Pro Bat",cartName:"Malik Beast Pro Willow Bat",cat:"bats",type:"bat",price:83700,rating:4.9,reviews:128,tag:"New Drop",tone:"green",sub:"English Willow",cartTag:"PRO SPEC",meta:[["Size","Men's SH"],["Weight","2lb 8oz"]],keys:"cricket bat willow"},
 {id:"pro1000",name:"Malik Pro 1000 Kashmir Willow",cartName:"Malik Pro 1000 Kashmir Willow",cat:"bats",type:"bat",price:70000,rating:4.9,reviews:128,tag:"Pro Spec",tone:"green",sub:"Kashmir Willow",cartTag:"PRO SPEC",meta:[["Willow","Kashmir"],["Grade","Pro Spec"]],keys:"cricket bat willow"},
@@ -116,7 +143,7 @@ window.MS_KEY = "AIzaSyCKHqm-_cjIxPJp403wB-1A8g5nF43P_GY";   // e.g. AIzaSy...
 {id:"helmet",name:"Titanium Helmet",cartName:"Titanium Grill Helmet",cat:"helmets",type:"helmet",price:37800,rating:4.9,reviews:78,tag:"Pro Grade",tone:"green",sub:"Safety Gear",cartTag:"SAFETY",meta:[["Grill","Titanium"],["Grade","Pro"]],keys:"cricket helmet grill safety"},
 {id:"duffel",name:"Alpha Duffel",cartName:"Alpha Duffel Kit Bag",cat:"accessories",type:"duffel",price:26600,rating:4.9,reviews:140,tag:"Waterproof",tone:"cyan",sub:"Gear Bag",cartTag:"GEAR BAG",meta:[["Type","Gear Bag"],["Build","Waterproof"]],keys:"duffel bag kit"}
 ];
-  function keep(id, rf, secs) { S = { id: id, refresh: rf, exp: Date.now() + (+secs) * 1000 }; raw.call(sessionStorage, "ms-fb", JSON.stringify(S)); }
+  function keep(id, rf, secs) { S = { id: id, refresh: rf, exp: Date.now() + (+secs) * 1000 }; raw.call(STORE, "ms-fb", JSON.stringify(S)); }
   function tok() {
     if (!S) return Promise.reject(new Error("login"));
     if (Date.now() < S.exp - 60000) return Promise.resolve(S.id);
@@ -168,6 +195,8 @@ window.MS_KEY = "AIzaSyCKHqm-_cjIxPJp403wB-1A8g5nF43P_GY";   // e.g. AIzaSy...
 </script>
 </head>
 <body>
+<div id="boot-splash" aria-hidden="true"><svg width="88" height="88" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1f1f23"/><path d="M8 20V8.5l8 7.5 8-7.5V20" fill="none" stroke="#00fe66" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><rect x="11" y="24" width="10" height="1.6" rx=".8" fill="#ffffff" opacity=".85"/></svg><div class="bs-name">Malik Controller</div><div class="bs-bar"></div></div>
+<script>setTimeout(function(){var s=document.getElementById("boot-splash");if(s)s.remove();},8000);</script>
 <div class="wrap" id="app"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <script>
@@ -185,27 +214,36 @@ const NEXT={pending:["confirmed","Confirm order"],confirmed:["dispatched","Mark 
 const PAYN={cod:"Cash on Delivery",easypaisa:"Easypaisa",jazzcash:"JazzCash"};
 const CATN={bats:"Bats",balls:"Balls",footballs:"Footballs",footwear:"Footwear",gloves:"Gloves",helmets:"Helmets",accessories:"Accessories"};
 const TYPE={bats:"bat",balls:"ball",footballs:"football",footwear:"shoe",gloves:"gloves",helmets:"helmet",accessories:"duffel"};
-let tab="orders",flt="all",tt;
-const ok=()=>sessionStorage.getItem("ms-admin-ok")==="1";
+const TABS=["orders","products","vouchers","report"];let tab=TABS.includes(location.hash.slice(1))?location.hash.slice(1):"orders",flt="all",tt;
+const ok=()=>{try{return msStore.getItem("ms-admin-ok")==="1"}catch(e){return false}};
+const splashOff=()=>{const s=$("#boot-splash");if(!s)return;s.classList.add("out");setTimeout(()=>s.remove(),350)};
 const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2400)};
 
 function lock(){
+  try{navigator.clearAppBadge&&navigator.clearAppBadge()}catch(e){}
+  splashOff();
   $("#app").innerHTML=`<div class="card gate"><h1>Owner desk</h1><p class="mute">Sign in with your owner email and password to manage orders and products.</p><label>Email<input id="em" type="email" autocomplete="username"></label><label style="margin-top:12px">Password<input id="pw" type="password" autocomplete="current-password"></label><p id="err" class="err" role="alert"></p><button class="btn pri" data-a="login">Unlock</button></div>`;
 }
 function boot(){
   $("#app").innerHTML=`<div class="card gate"><p class="mute">Loading your shop data…</p></div>`;
-  msPull().then(()=>{knownO=oIds()}).then(main,()=>{sessionStorage.removeItem("ms-admin-ok");lock();$("#err").textContent="Could not load. Check the setup values, your internet, then sign in again."});
+  msPull().then(()=>{knownO=oIds()}).then(main,x=>{
+    const m=x&&x.message;
+    /* Installed app: if only the internet failed, stay signed in and offer Try again (do not throw the owner out). */
+    if(window.msApp&&!(m==="login"||m==="401"||m==="403"||m==="setup")){splashOff();$("#app").innerHTML=`<div class="card gate"><h1>Internet nahi mila</h1><p class="mute">Shop ka data load nahi ho saka. Internet check karein, phir dobara koshish karein. Aap sign in hi hain.</p><button class="btn pri" data-a="retry">Dobara koshish karein</button><button class="btn" data-a="lock" style="margin-top:8px">Lock (sign out)</button></div>`;return}
+    msStore.removeItem("ms-admin-ok");lock();$("#err").textContent="Could not load. Check the setup values, your internet, then sign in again."});
 }
 function badge(){
   const n=rd("ms-orders-pk",[]).filter(x=>x.status==="pending").length;
   document.title=(n?`(${n}) `:"")+"Malik Sports – Owner";
   const b=$("#nb");if(b){b.textContent=n;b.hidden=!n}
+  try{if(navigator.setAppBadge){n?navigator.setAppBadge(n):navigator.clearAppBadge()}}catch(e){}
 }
 function main(){
   $("#app").innerHTML=`<div class="top"><h1>Malik Sports · Owner</h1><div class="row g"><a href="https://maliksports.github.io/Malik-Sports/">View shop</a><button class="btn" data-a="lock">Lock</button></div></div>
   ${alertsHTML()}
   <div class="tabs"><button class="tab${tab==="orders"?" on":""}" data-a="tab" data-v="orders">Orders<span id="nb"></span></button><button class="tab${tab==="products"?" on":""}" data-a="tab" data-v="products">Products</button><button class="tab${tab==="vouchers"?" on":""}" data-a="tab" data-v="vouchers">Vouchers</button><button class="tab${tab==="report"?" on":""}" data-a="tab" data-v="report">Report</button></div>`+(tab==="orders"?ordersView():tab==="vouchers"?vouchersView():tab==="report"?reportView():productsView());
   badge();
+  splashOff();
 }
 function ordersView(){
   const o=rd("ms-orders-pk",[]),cnt=s=>s==="all"?o.length:o.filter(x=>x.status===s).length;
@@ -260,7 +298,7 @@ function audioInit(){try{if(!actx)actx=new(window.AudioContext||window.webkitAud
 function beep(){try{audioInit();if(!actx)return;[0,.25].forEach((d,i)=>{const o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime+d;o.type="sine";o.frequency.value=i?1175:880;o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.35,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.4);o.start(t);o.stop(t+.45)})}catch(e){}}
 function sysNotify(title,body){
   if(!("Notification" in window)||Notification.permission!=="granted")return;
-  const o={body,icon:"icon-192.png",tag:"ms-owner",renotify:true,vibrate:[200,100,200]},fb=()=>{try{new Notification(title,o)}catch(e){}};
+  const o={body,icon:"admin-192.png",tag:"ms-owner",renotify:true,vibrate:[200,100,200],data:{url:location.href.split("#")[0]}},fb=()=>{try{new Notification(title,o)}catch(e){}};
   if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration)navigator.serviceWorker.getRegistration().then(r=>r&&r.showNotification?r.showNotification(title,o):fb()).catch(fb);else fb();
 }
 function ownerAlert(title,body){beep();try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}sysNotify(title,body);toast(title)}
@@ -287,7 +325,7 @@ function checkNewOrders(){
 }
 function alertsHTML(){
   const perm=("Notification" in window)&&Notification.permission==="granted",st=perm?"Sound + browser alerts ON":"Not set up on this device";
-  if(!alertsOpen)return `<div class="mute sm" style="margin:-4px 0 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">Alerts: <b style="color:${perm?"var(--acc)":"var(--fg)"}">${st}</b><button class="btn" data-a="alerts" style="padding:6px 12px;font-size:13px">Set up alerts</button></div>`;
+  if(!alertsOpen)return `<div class="mute sm" style="margin:-4px 0 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">Alerts: <b style="color:${perm?"var(--acc)":"var(--fg)"}">${st}</b><button class="btn" data-a="alerts" style="padding:6px 12px;font-size:13px">Set up alerts</button>${window.msApp?"":`<button class="btn pri" data-a="install" style="padding:6px 12px;font-size:13px">Install app</button>`}</div>`;
   return `<div class="card"><div class="row"><b>Alerts (notification)</b><button class="btn" data-a="alerts">Close</button></div>
   <p class="mute sm" style="margin:8px 0 6px"><b>A) Phone par (app band ho tab bhi):</b></p>
   <ol class="sm mute" style="margin:0 0 10px;padding-left:20px;line-height:1.7"><li>Play Store ya App Store se <b>ntfy</b> app install karein.</li><li>App kholein, <b>+</b> dabayein, <b>Subscribe to topic</b> mein ye likhein:<br><b style="color:var(--acc);user-select:all;word-break:break-all">${esc(NT)}</b></li><li>Neeche <b>Test bhejein</b> dabayein. Phone par notification aani chahiye.</li></ol>
@@ -326,9 +364,12 @@ document.addEventListener("click",e=>{
     const em=$("#em").value.trim(),pw=$("#pw").value;
     if(!em||!pw){$("#err").textContent="Enter your email and password.";return}
     t.disabled=true;t.textContent="Signing in…";
-    msLogin(em,pw).then(()=>{sessionStorage.setItem("ms-admin-ok","1");boot()},x=>{$("#err").textContent=x&&x.message==="setup"?"Setup values are missing at the top of admin.html.":"Wrong email or password. Try again.";t.disabled=false;t.textContent="Unlock"});
-  }else if(a==="lock"){sessionStorage.removeItem("ms-admin-ok");sessionStorage.removeItem("ms-fb");lock()}
-  else if(a==="tab"){tab=v;main()}
+    msLogin(em,pw).then(()=>{msStore.setItem("ms-admin-ok","1");boot()},x=>{$("#err").textContent=x&&x.message==="setup"?"Setup values are missing at the top of admin.html.":"Wrong email or password. Try again.";t.disabled=false;t.textContent="Unlock"});
+  }else if(a==="lock"){[sessionStorage,localStorage].forEach(x=>{try{x.removeItem("ms-admin-ok");x.removeItem("ms-fb")}catch(e){}});lock()}
+  else if(a==="retry")boot()
+  else if(a==="install")doInstall()
+  else if(a==="sheet-close"){const o=$("#install-sheet");if(o)o.remove()}
+  else if(a==="tab"){tab=v;try{history.replaceState(null,"","#"+v)}catch(e){}main()}
   else if(a==="flt"){flt=v;main()}
   else if(a==="st"){
     const all=rd("ms-orders-pk",[]),x=all.find(o=>o.id===id);if(!x)return;
@@ -378,8 +419,49 @@ addEventListener("storage",e=>{
   if(!ok()||e.key!=="ms-orders-pk")return;
   toast("Orders updated");if(tab==="orders")main();else badge();
 });
-setInterval(()=>{if(!ok())return;msPull().then(c=>{if(!c)return;checkNewOrders();if(tab==="orders"){main()}else badge()},()=>{})},15000);
+const tick=()=>{if(!ok())return;msPull().then(c=>{if(!c)return;checkNewOrders();if(tab==="orders"){main()}else badge()},()=>{})};
+setInterval(tick,15000);
+/* Coming back to the app (or the internet returning) refreshes the orders straight away. */
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)tick()});
+addEventListener("online",()=>{if($("[data-a=retry]"))boot();else tick()});
+addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(ok()&&TABS.includes(h)&&h!==tab){tab=h;main()}});
 document.addEventListener("click",audioInit);
+/* ---------- Install this admin panel as an app (https only) ---------- */
+let DEF=null;
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();DEF=e});
+addEventListener("appinstalled",()=>{DEF=null;toast("App install ho gayi. Home screen se kholein.");if(ok())main()});
+function sheet(html){
+  const o=$("#install-sheet");if(o)o.remove();
+  const d=document.createElement("div");d.id="install-sheet";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");
+  d.innerHTML=`<div class="box"><h2>Admin app install karein</h2><div class="sm" style="line-height:1.7">${html}</div><button class="btn" data-a="sheet-close" style="width:100%;margin-top:16px">Band karein</button></div>`;
+  document.body.appendChild(d);
+}
+document.addEventListener("click",e=>{if(e.target&&e.target.id==="install-sheet")e.target.remove()});
+/* Shop app and admin app must live on different addresses, or Chrome treats them as one app. */
+function adminHome(){
+  try{
+    if(!window.MS_ADMIN_URL)return"";
+    const u=new URL(window.MS_ADMIN_URL,location.href),h=location.hostname;
+    if(!h||h==="localhost"||h==="127.0.0.1")return"";
+    return u.origin!==location.origin?u.href:"";
+  }catch(e){return""}
+}
+function doInstall(){
+  if(window.msApp){toast("Ye app pehle se install hai");return}
+  const away=adminHome();
+  if(away){
+    sheet(`<p style="margin:0 0 10px">Admin app is address se install <b>nahi</b> hoti. Shop aur admin ek hi address par hon to Chrome dono ko <b>ek hi app</b> samajhta hai aur "This app is already installed" likh deta hai (wo shop wali app hoti hai).</p><p style="margin:0 0 8px"><b>Admin app is alag address se install karein:</b></p><a class="btn pri" href="${esc(away)}" style="display:block;text-align:center;text-decoration:none">Admin ka install wala address kholein</a><p class="mute" style="word-break:break-all;margin:4px 0 12px">${esc(away)}</p><ol style="margin:0;padding-left:20px"><li>Wahan login karein.</li><li>Hara <b>Install app</b> button dabayein, phir <b>Install</b>.</li><li>Home screen par <b>MS Admin</b> aayega. Shop wali app alag rahegi, dono saath chalengi.</li></ol>`);
+    return;
+  }
+  if(DEF){const p=DEF;DEF=null;try{p.prompt()}catch(e){}return}
+  const ua=navigator.userAgent||"",ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),secure=location.protocol==="https:"||location.hostname==="localhost";
+  if(ios)sheet(`<ol style="margin:0;padding-left:20px"><li>Is page ko <b>Safari</b> mein kholein.</li><li><b>Share</b> button dabayein (teer wala dibba).</li><li><b>Add to Home Screen</b> phir <b>Add</b> dabayein.</li></ol>`);
+  else if(!secure){
+    const own="https://"+location.host+location.pathname,hu=String(window.MS_HTTPS_URL||"").replace(/\/?$/,"/")+"admin.html";
+    sheet(`<p style="margin:0 0 8px">Chrome app sirf <b>https</b> (taale wale) address se install karta hai. Ye address <b>http</b> hai, is liye yahan install nahi hoga.</p><a class="btn pri" href="${esc(own)}" style="display:block;text-align:center;text-decoration:none">1) Isi address ka https version kholein</a><p class="mute" style="word-break:break-all;margin:4px 0 12px">${esc(own)}</p><a class="btn" href="${esc(hu)}" style="display:block;text-align:center;text-decoration:none">2) Ya ye dusra link kholein</a><p class="mute" style="word-break:break-all;margin:4px 0 0">${esc(hu)}</p><p style="margin:12px 0 0">Jahan taala nazar aaye, wahan ye page khol kar dobara <b>Install app</b> dabayein.</p>`);
+  }
+  else sheet(`<p style="margin:0 0 8px">Chrome ke <b>&#8942; menu</b> (upar daayen) mein <b>Install app</b> ya <b>Add to Home screen</b> dabayein.</p><p class="mute" style="margin:0">Agar ye option nahi dikhta: page refresh kar ke 10 second ruken, aur Chrome update karein. Agar app pehle se install hai to use home screen se kholein.</p>`);
+}
 if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))navigator.serviceWorker.register("sw.js").catch(()=>{});
 ok()?boot():lock();
 </script>

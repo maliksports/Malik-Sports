@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Malik Sports - Internet nahi hai</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ffffff">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{display:flex;align-items:center;justify-content:center;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom));background:#fff;color:#131317;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;text-align:center}
+  .box{max-width:340px}
+  .ic{width:84px;height:84px;margin:0 auto 18px;border-radius:22px;background:#131317;display:flex;align-items:center;justify-content:center}
+  .ic svg{width:44px;height:44px}
+  h1{font-size:22px;margin:0 0 8px;font-weight:800;letter-spacing:-.01em}
+  p{margin:0 0 22px;color:#55565e;line-height:1.5;font-size:15px}
+  button{appearance:none;border:0;cursor:pointer;background:#00b447;color:#fff;font-weight:700;font-size:16px;padding:14px 28px;border-radius:14px;min-width:160px}
+  button:active{transform:scale(.97)}
+  .sm{margin-top:18px;font-size:13px;color:#8a8b93}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#00fe66" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.8a15 15 0 0 1 20 0"/><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 16a5 5 0 0 1 7 0"/><path d="M12 20h.01"/><path d="M3 3l18 18"/></svg></div>
+  <h1>Internet nahi hai</h1>
+  <p>Aap ka internet band ya bohat kamzor hai. Internet on kar ke dobara koshish karein, Malik Sports phir se khul jayega.</p>
+  <button type="button" id="retry">Dobara koshish karein</button>
+  <div class="sm">Malik Sports</div>
+</div>
+<script>
+  document.getElementById("retry").onclick = function () { location.reload(); };
+  window.addEventListener("online", function () { location.reload(); });
+</script>
+</body>
+</html>
