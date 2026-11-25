@@ -47,6 +47,8 @@ button{font:inherit;cursor:pointer;border:0;color:var(--fg)}
 .total{font-family:Anton,Impact,sans-serif;font-size:26px;color:var(--acc)}
 .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .btn{padding:11px 18px;border-radius:10px;font-weight:700;background:var(--hi)}
+.kebab{width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;font-size:20px;line-height:1}
+.dlg-acts{display:flex;flex-direction:column;gap:8px;margin-top:16px}.dlg-acts .btn{width:100%}
 .btn.pri{background:var(--acc);color:var(--ink)}.btn.bad{background:none;color:var(--err);box-shadow:inset 0 0 0 1px var(--err)}
 .btn:active{transform:scale(.97)}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
@@ -58,7 +60,7 @@ textarea{resize:vertical}
 .empty{text-align:center;padding:32px 16px}.empty p{margin:4px 0 0}
 .gate{max-width:24rem;margin:15vh auto 0}.gate p{margin:8px 0 16px}.gate .btn{width:100%}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(min-width:700px){.stats{grid-template-columns:repeat(4,1fr)}}.stat{padding:14px}.stat .total{font-size:22px;line-height:1.2}.bars{display:flex;align-items:flex-end;gap:8px;height:130px;margin-top:8px}.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%;min-width:0}.bar i{display:block;width:100%;background:var(--acc);border-radius:6px 6px 0 0;min-height:3px}.bar span{font-size:11px;color:var(--mute)}.bar b{font-size:11px;font-weight:600}.meter{height:8px;border-radius:99px;background:#0e0e12;overflow:hidden;margin-top:6px}.meter i{display:block;height:100%;background:var(--acc);border-radius:99px}
-#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:var(--acc);color:var(--ink);font-weight:700;padding:12px 20px;border-radius:12px;transition:.25s;pointer-events:none}
+#toast{z-index:400;position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:var(--acc);color:var(--ink);font-weight:700;padding:12px 20px;border-radius:12px;transition:.25s;pointer-events:none}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 /* App mode + install sheet */
@@ -173,7 +175,7 @@ window.MS_KEY = "AIzaSyCKHqm-_cjIxPJp403wB-1A8g5nF43P_GY";   // e.g. AIzaSy...
       raw.call(localStorage, "ms-products-pk", pr);
       raw.call(localStorage, "ms-vouchers-pk", typeof r[1] === "string" ? r[1] : "[]");
       var o = r[2] || {}, arr = []; snap = {};
-      Object.keys(o).forEach(function (id) { try { arr.push(JSON.parse(o[id])); snap[id] = o[id]; } catch (e) {} });
+      Object.keys(o).forEach(function (id) { if (gone[id]) return; try { arr.push(JSON.parse(o[id])); snap[id] = o[id]; } catch (e) {} });
       arr.sort(function (a, b) { return String(b.placedAt).localeCompare(String(a.placedAt)); });
       var s = JSON.stringify(arr), old = localStorage.getItem("ms-orders-pk");
       raw.call(localStorage, "ms-orders-pk", s);
@@ -181,6 +183,25 @@ window.MS_KEY = "AIzaSyCKHqm-_cjIxPJp403wB-1A8g5nF43P_GY";   // e.g. AIzaSy...
     });
   };
   window.msDb = db;
+  /* Check an email + password against Firebase WITHOUT changing the current login (asked before an order is deleted). */
+  function uidOf(t) { try { return JSON.parse(atob(String(t).split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).user_id || null; } catch (e) { return null; } }
+  window.msVerify = function (email, pw) {
+    if (!ready) return Promise.reject(new Error("setup"));
+    return fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + encodeURIComponent(KEY), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email, password: pw, returnSecureToken: true }) })
+      .then(function (r) { return r.json(); }).then(function (j) {
+        if (!j || !j.idToken) throw new Error(/TOO_MANY/.test(String(j && j.error && j.error.message)) ? "many" : "login");
+        var mine = S && uidOf(S.id); if (j.localId && mine && j.localId !== mine) throw new Error("login");   // must be the same owner account that is signed in
+        return true;
+      });
+  };
+  /* Delete one order from the database for good: its tracking record first, then the order itself. Both must succeed. */
+  var gone = {};
+  window.msDelOrder = function (id) {
+    if (!ready) return Promise.reject(new Error("setup"));
+    gone[id] = 1;   // so a refresh in the middle cannot bring it back
+    return db("DELETE", "track/" + id).then(function () { return db("DELETE", "orders/" + id); })
+      .then(function () { delete snap[id]; }, function (e) { delete gone[id]; throw e; });
+  };
   /* Whenever this page saves something, also send it to the database. */
   Storage.prototype.setItem = function (k, v) {
     raw.call(this, k, v);
@@ -188,7 +209,7 @@ window.MS_KEY = "AIzaSyCKHqm-_cjIxPJp403wB-1A8g5nF43P_GY";   // e.g. AIzaSy...
     if (k === "ms-products-pk") db("PUT", "products", v).catch(fail);
     else if (k === "ms-vouchers-pk") db("PUT", "vouchers", v).catch(fail);
     else if (k === "ms-orders-pk") {
-      try { JSON.parse(v).forEach(function (o) { var s = JSON.stringify(o), old = snap[o.id], ps = null; try { ps = old ? JSON.parse(old).status : null; } catch (e) {} if (old !== s) { snap[o.id] = s; db("PUT", "orders/" + o.id, s).catch(fail); if (ps !== o.status) db("PUT", "track/" + o.id + "/s", o.status).catch(function () {}); } }); } catch (e) {}
+      try { JSON.parse(v).forEach(function (o) { if (gone[o.id]) return; var s = JSON.stringify(o), old = snap[o.id], ps = null; try { ps = old ? JSON.parse(old).status : null; } catch (e) {} if (old !== s) { snap[o.id] = s; db("PUT", "orders/" + o.id, s).catch(fail); if (ps !== o.status) db("PUT", "track/" + o.id + "/s", o.status).catch(function () {}); } }); } catch (e) {}
     }
   };
 })();
@@ -255,7 +276,7 @@ function orderCard(x){
   const c=x.customer,[lbl,cls]=ST[x.status]||ST.pending,n=NEXT[x.status],id=esc(x.id);
   const ph=String(c.phone).replace(/\D/g,"").replace(/^92/,"0");
   const when=new Date(x.placedAt).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
-  return `<article class="card"><div class="row"><div><span class="id">#${id}</span><div class="mute sm">${when}</div></div><span class="badge ${cls}">${lbl}</span></div>
+  return `<article class="card"><div class="row"><div><span class="id">#${id}</span><div class="mute sm">${when}</div></div><div class="row g" style="gap:8px"><span class="badge ${cls}">${lbl}</span><button class="btn kebab" data-a="omenu" data-id="${id}" aria-label="More options for order ${id}" aria-haspopup="dialog">&#8942;</button></div></div>
   <div class="cust"><b>${esc(c.name)}</b><div><a href="tel:${esc(ph)}">${esc(ph)}</a> · <a href="https://wa.me/92${esc(ph.slice(1))}" target="_blank" rel="noopener">WhatsApp</a> · <a href="mailto:${esc(c.email)}">${esc(c.email)}</a></div><div class="mute">${esc(c.address)}, ${esc(c.city)}</div></div>
   <ul class="items">${x.lines.map(l=>`<li><span>${esc(l.name)} × ${l.qty}</span><span>${money(l.price*l.qty)}</span></li>`).join("")}</ul>${x.voucher?`<div class="sm mute" style="margin:-4px 0 10px">Voucher ${esc(x.voucher.code)}: -${money(x.voucher.discount)}</div>`:""}
   <div class="row g"><div class="mute sm">${esc(PAYN[x.pay.method]||x.pay.method)}${x.pay.txn?` · ID <b>${esc(x.pay.txn)}</b>`:""}<br>${x.delivery==="express"?"Express":"Standard"} delivery</div><div class="total">${money(x.totals.total)}</div></div>
@@ -369,6 +390,42 @@ document.addEventListener("click",e=>{
   else if(a==="retry")boot()
   else if(a==="install")doInstall()
   else if(a==="sheet-close"){const o=$("#install-sheet");if(o)o.remove()}
+  else if(a==="omenu"){
+    const x=rd("ms-orders-pk",[]).find(o=>o.id===id);if(!x)return;
+    sheet(`<span class="mute">${esc(x.customer.name)} · ${money(x.totals.total)} · ${esc((ST[x.status]||ST.pending)[0])}</span>`,"Order #"+esc(x.id),
+      `<div class="dlg-acts"><button class="btn" data-a="ocopy" data-id="${esc(x.id)}">Order number copy karein</button><button class="btn bad" data-a="odel" data-id="${esc(x.id)}">Delete order</button><button class="btn" data-a="sheet-close">Band karein</button></div>`);
+  }
+  else if(a==="ocopy"){
+    const o=$("#install-sheet");if(o)o.remove();
+    try{navigator.clipboard.writeText(id).then(()=>toast("Order number copy ho gaya: "+id),()=>toast("Order number: "+id))}catch(e){toast("Order number: "+id)}
+  }
+  else if(a==="odel"){
+    const x=rd("ms-orders-pk",[]).find(o=>o.id===id);if(!x)return;
+    const live=x.status!=="delivered"&&x.status!=="cancelled";
+    sheet(`<div class="card" style="margin:0 0 10px"><b>#${esc(x.id)}</b> · ${esc(x.customer.name)}<div class="mute">${esc((ST[x.status]||ST.pending)[0])} · ${money(x.totals.total)}</div></div><p style="margin:0 0 8px">Ye order <b>hamesha ke liye</b> hat jayega: Firebase se (order ki saari details), sales report se, aur customer ka tracking page bhi band ho jayega. Wapas nahi aa sakta.</p><p style="margin:0 0 8px">Agle step mein aap se apna <b>Email aur Password</b> poochha jayega.</p>${live?`<p style="margin:0;color:var(--err)"><b>Dhyan:</b> ye order abhi poora nahi hua (${esc((ST[x.status]||ST.pending)[0])}). Asli customer ka ho to delete na karein, <b>Cancel order</b> use karein.</p>`:""}`,
+      "Order delete karein?",`<div class="dlg-acts"><button class="btn bad" data-a="odel-yes" data-id="${esc(x.id)}">Haan, delete karein</button><button class="btn" data-a="sheet-close">Nahi, rakhein</button></div>`);
+  }
+  else if(a==="odel-yes"){
+    const x=rd("ms-orders-pk",[]).find(o=>o.id===id);if(!x)return;
+    sheet(`<div class="card" style="margin:0 0 10px"><b>#${esc(x.id)}</b> · ${esc(x.customer.name)}<div class="mute">${esc((ST[x.status]||ST.pending)[0])} · ${money(x.totals.total)}</div></div><p style="margin:0 0 10px">Pakki tasdeeq ke liye apne admin login ka <b>Email</b> aur <b>Password</b> dalein (wahi jo is page par login karte waqt dalte hain).</p><label for="dem">Email<input id="dem" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false"></label><label for="dpw" style="margin-top:10px">Password<input id="dpw" type="password" autocomplete="current-password"></label><div id="derr" class="err" role="alert"></div>`,
+      "Email aur password dalein",`<div class="dlg-acts"><button class="btn bad" data-a="odel-go" data-id="${esc(x.id)}">Order delete karein</button><button class="btn" data-a="sheet-close">Nahi, rakhein</button></div>`);
+    setTimeout(()=>{const e=$("#dem");if(e)e.focus()},60);
+  }
+  else if(a==="odel-go"){
+    const em=($("#dem")||{}).value,pw=($("#dpw")||{}).value,er=$("#derr");
+    if(!em||!pw){er.textContent="Email aur password dono dalein.";return}
+    const back=m=>{t.disabled=false;t.textContent="Order delete karein";er.textContent=m};
+    t.disabled=true;t.textContent="Check ho raha hai…";er.textContent="";
+    let verified=false;
+    msVerify(em.trim(),pw).then(()=>{verified=true;t.textContent="Delete ho raha hai…";return msDelOrder(id)}).then(()=>{
+      wr("ms-orders-pk",rd("ms-orders-pk",[]).filter(o=>o.id!==id));
+      const o=$("#install-sheet");if(o)o.remove();
+      main();toast("Order #"+id+" delete ho gaya");
+    },x=>{
+      const m=x&&x.message;
+      back(verified?"Delete nahi ho saka. Internet check karein aur dobara koshish karein. Order abhi bhi mojood hai.":m==="login"?"Email ya password ghalat hai. Order delete nahi hua.":m==="many"?"Bohat zyada koshishein ho gayin. Thori der baad dobara koshish karein.":m==="setup"?"Setup values admin.html ke upar missing hain.":"Internet ka masla hai. Check karke dobara koshish karein.");
+    });
+  }
   else if(a==="tab"){tab=v;try{history.replaceState(null,"","#"+v)}catch(e){}main()}
   else if(a==="flt"){flt=v;main()}
   else if(a==="st"){
@@ -430,13 +487,14 @@ document.addEventListener("click",audioInit);
 let DEF=null;
 addEventListener("beforeinstallprompt",e=>{e.preventDefault();DEF=e});
 addEventListener("appinstalled",()=>{DEF=null;toast("App install ho gayi. Home screen se kholein.");if(ok())main()});
-function sheet(html){
+function sheet(html,title,foot){
   const o=$("#install-sheet");if(o)o.remove();
   const d=document.createElement("div");d.id="install-sheet";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");
-  d.innerHTML=`<div class="box"><h2>Admin app install karein</h2><div class="sm" style="line-height:1.7">${html}</div><button class="btn" data-a="sheet-close" style="width:100%;margin-top:16px">Band karein</button></div>`;
+  d.innerHTML=`<div class="box"><h2>${title||"Admin app install karein"}</h2><div class="sm" style="line-height:1.7">${html}</div>${foot||`<button class="btn" data-a="sheet-close" style="width:100%;margin-top:16px">Band karein</button>`}</div>`;
   document.body.appendChild(d);
 }
 document.addEventListener("click",e=>{if(e.target&&e.target.id==="install-sheet")e.target.remove()});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target&&(e.target.id==="dpw"||e.target.id==="dem")){e.preventDefault();const b=$("[data-a=odel-go]");if(b&&!b.disabled)b.click()}});
 /* Shop app and admin app must live on different addresses, or Chrome treats them as one app. */
 function adminHome(){
   try{
