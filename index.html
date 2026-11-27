@@ -142,7 +142,7 @@ window.MS_NTFY = "malik-sports-akivmv6xef29q7w357";
 window.MS_HTTPS_URL = "https://maliksports.github.io/Malik-Sports/";   // the https address of your site (installing as an app works only on https)
 window.MS_FORCE_HTTPS = false;   // true = http par aane wale visitor apne aap https par chale jayenge. Pehle browser mein https:// wala address khol kar dekh lein ke wo khulta hai, phir true karein.
 try { if (window.MS_FORCE_HTTPS && location.protocol === "http:" && !/^(localhost|127\.|\[::1\])/.test(location.hostname)) location.replace("https://" + location.host + location.pathname + location.search + location.hash); } catch (e) {}
-window.MS_VERSION = "2026-11-26";   // sirf nishan: Help page ke neeche likha nazar aata hai, taake pata chale nayi file lagi ya purani
+window.MS_VERSION = "2026-11-27";   // sirf nishan: Help page ke neeche likha nazar aata hai, taake pata chale nayi file lagi ya purani
 window.MS_GA = "";   // Google Analytics ID (jaise G-XXXXXXXXXX). Khali = analytics band. Bharne se pehle apni privacy ka khayal rakhein.
 try { var _ga = String(window.MS_GA || ""); if (/^G-[A-Z0-9]{6,14}$/.test(_ga)) { var _gs = document.createElement("script"); _gs.async = true; _gs.src = "https://www.googletagmanager.com/gtag/js?id=" + _ga; document.head.appendChild(_gs); window.dataLayer = window.dataLayer || []; window.gtag = function () { dataLayer.push(arguments); }; window.gtag("js", new Date()); window.gtag("config", _ga, { anonymize_ip: true }); } } catch (e) {}
 /* ============ SHARED DATABASE: paste your Firebase database address between the quotes ============ */
@@ -1152,6 +1152,69 @@ function msSha256(s){
     setTimeout(hide, 2500);
   })();
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(function () {});
+})();
+</script>
+
+<script>
+/* ============ SITE TEXT EDITS: the owner changes any text from admin.html > "Edit shop website". Do not edit this part. ============ */
+(function () {
+  "use strict";
+  var DB = String(window.MS_DB || "").replace(/\/+$/, ""), LS = "ms-site-pk";
+  var EDITS = {}, ORIG = new WeakMap(), touched = false, timer = 0;
+  var SKIP = "script,style,noscript,textarea,input,select,option,svg,.material-symbols-outlined,[data-ms-noedit],[contenteditable],#boot-splash,#home-grid,#shop-grid,#cart-lines,#cart-summary,#cart-progress,#order-body,#bag-count,#cart-count";
+  function load(s) { try { var o = JSON.parse(s); return o && typeof o === "object" && !Array.isArray(o) ? o : {}; } catch (e) { return {}; } }
+  function norm(s) { return String(s).replace(/\s+/g, " ").trim(); }
+  function origOf(n) { return ORIG.has(n) ? ORIG.get(n) : n.nodeValue; }
+  function scopeOf(n) { var p = n.parentElement, v = p && p.closest ? p.closest('section[id^="view-"]') : null; return v ? v.id : "global"; }
+  function keyOf(n) { return scopeOf(n) + "|" + norm(origOf(n)); }
+  function okNode(n) {
+    var p = n.parentElement; if (!p || (p.closest && p.closest(SKIP))) return false;
+    var s = norm(origOf(n)); if (!s) return false;
+    try { if (!/\p{L}/u.test(s)) return false; } catch (e) {}
+    return !/^rs\.?\s*[\d,.\s]+$/i.test(s);
+  }
+  function put(n, txt) {
+    var m = /^(\s*)([\s\S]*?)(\s*)$/.exec(origOf(n)), nv = m[1] + txt + m[3];
+    if (n.nodeValue !== nv) n.nodeValue = nv;
+  }
+  function apply() {
+    if (!document.body || (!touched && !Object.keys(EDITS).length)) return;
+    var w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null), n, list = [];
+    while ((n = w.nextNode())) list.push(n);
+    list.forEach(function (n) {
+      if (n.__msEditing) return;
+      var has = ORIG.has(n);
+      if (!has && !okNode(n)) return;
+      var k = keyOf(n);
+      if (Object.prototype.hasOwnProperty.call(EDITS, k)) { if (!has) { ORIG.set(n, n.nodeValue); touched = true; } put(n, EDITS[k]); }
+      else if (has) { n.nodeValue = ORIG.get(n); ORIG.delete(n); }
+    });
+  }
+  function sched() { clearTimeout(timer); timer = setTimeout(apply, 60); }
+  window.msSite = {
+    hold: false, norm: norm, ok: okNode, key: keyOf, orig: origOf,
+    bind: function (n, o) { ORIG.set(n, o); touched = true; },
+    edits: function () { return JSON.parse(JSON.stringify(EDITS)); },
+    set: function (m) { EDITS = m && typeof m === "object" ? JSON.parse(JSON.stringify(m)) : {}; touched = true; apply(); },
+    cache: function () { try { localStorage.setItem(LS, JSON.stringify(EDITS)); } catch (e) {} }
+  };
+  try { EDITS = load(localStorage.getItem(LS)); } catch (e) {}
+  apply();
+  if (window.MutationObserver) new MutationObserver(sched).observe(document.body, { childList: true, subtree: true });
+  /* Download the latest edits from the shared database (public read). No page reload is needed: the text just changes. */
+  function pull() {
+    if (DB.indexOf("https://") !== 0 || window.msSite.hold) return;
+    fetch(DB + "/site.json").then(function (r) { return r.json(); }).then(function (s) {
+      if (window.msSite.hold) return;
+      if (s && typeof s === "object" && s.error) return;
+      var str = typeof s === "string" ? s : "{}", old = ""; try { old = localStorage.getItem(LS) || ""; } catch (e) {}
+      if (str === old || (!old && str === "{}")) return;
+      try { localStorage.setItem(LS, str); } catch (e) {}
+      EDITS = load(str); touched = true; apply();
+    }).catch(function () {});
+  }
+  pull();
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) pull(); });
 })();
 </script>
 
