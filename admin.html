@@ -94,14 +94,19 @@ window.MS_EMAIL = {
     confirmed: ["confirmed", "Good news! Your order is confirmed and we are getting it ready."],
     dispatched: ["on its way", "Your order has been dispatched."],
     delivered: ["delivered", "Your order has been delivered. We hope you enjoy your gear!"],
-    cancelled: ["cancelled", "Your order has been cancelled. If you did not expect this, please contact us."]
+    cancelled: ["cancelled", "Your order has been cancelled. If you did not expect this, please contact us."],
+    returned: ["return received", "We have received your return. We will contact you about the next step."],
+    refunded: ["refunded", "Your refund has been processed. Thank you for your patience."]
   };
   window.msMail = function (o, kind) {
     var C = window.MS_EMAIL || {}, T = TEXT[kind];
     if (!C.serviceId || !C.templateId || !C.publicKey || !T || !o || !o.customer || !o.customer.email) return Promise.resolve("off");
     var shop = C.shop || "Malik Sports", extra = "";
     if (kind === "confirmed" && o.pay.method === "cod") extra = " Please keep " + money(o.totals.total) + " ready for the rider.";
-    if (kind === "dispatched") extra = o.delivery === "express" ? " It should reach you in 2–4 working days." : " It should reach you in 4–6 working days.";
+    if (kind === "dispatched") {
+      extra = o.delivery === "express" ? " It should reach you in 2–4 working days." : " It should reach you in 4–6 working days.";
+      if (o.courier || o.tracking) extra += " Courier: " + (o.courier || "-") + (o.tracking ? ", tracking number: " + o.tracking : "") + ".";
+    }
     var msg = "Hi " + o.customer.name + ",\n\n" + T[1] + extra + "\n\nOrder #" + o.id + "\n" +
       o.lines.map(function (l) { return "• " + l.name + " × " + l.qty + " — " + money(l.price * l.qty); }).join("\n") +
       (o.voucher ? "\nVoucher (" + o.voucher.code + "): -" + money(o.voucher.discount) : "") + "\n\nTotal: " + money(o.totals.total) + "\nDeliver to: " + o.customer.address + ", " + o.customer.city + "\nPayment: " + (PAY[o.pay.method] || o.pay.method) +
@@ -121,6 +126,7 @@ window.MS_HTTPS_URL = "https://maliksports.github.io/Malik-Sports/";   // the ht
 window.MS_ADMIN_URL = "https://maliksports.github.io/Malik-Sports/admin.html";   // admin app yahin se install hoti hai. Shop aur admin ek hi address par hon to Chrome dono ko ek hi app maanta hai ("already installed"), isliye admin ka address shop se ALAG rakhein. Khali ("") karein to isi address se install hogi.
 window.MS_FORCE_HTTPS = false;   // true = http par aane wale visitor apne aap https par chale jayenge. Pehle browser mein https:// wala address khol kar dekh lein ke wo khulta hai, phir true karein.
 try { if (window.MS_FORCE_HTTPS && location.protocol === "http:" && !/^(localhost|127\.|\[::1\])/.test(location.hostname)) location.replace("https://" + location.host + location.pathname + location.search + location.hash); } catch (e) {}
+window.MS_VERSION = "2026-11-26";   // sirf nishan: upload ke baad admin ke neeche likha nazar aata hai, taake pata chale nayi file lagi ya purani
 /* ============ SHARED DATABASE: paste your 2 Firebase values between the quotes ============ */
 window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. https://malik-sports-default-rtdb.firebaseio.com
 window.MS_KEY = "AIzaSyCKHqm-_cjIxPJp403wB-1A8g5nF43P_GY";   // e.g. AIzaSy...
@@ -166,21 +172,92 @@ window.MS_KEY = "AIzaSyCKHqm-_cjIxPJp403wB-1A8g5nF43P_GY";   // e.g. AIzaSy...
     return fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + encodeURIComponent(KEY), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email, password: pw, returnSecureToken: true }) })
       .then(function (r) { return r.json(); }).then(function (j) { if (!j.idToken) throw new Error("login"); keep(j.idToken, j.refreshToken, j.expiresIn); });
   };
-  /* Download products, vouchers and orders from the database. Resolves true if the orders changed. */
-  window.msPull = function () {
+  /* SHA-256 (works on http pages too). Voucher codes are stored under their hash in "vcheck", so the full code list is never public. */
+  var msSha256 = (function () {
+function msSha256(s){
+  var m=unescape(encodeURIComponent(String(s))),l=m.length,n=(((l+8)>>6)+1)<<4,x=[],i,j,p,c=0,H=[],K=[];
+  for(i=0;i<n;i++)x[i]=0;
+  for(p=2;c<64;p++){for(j=2;j*j<=p&&p%j;j++);if(j*j>p){if(c<8)H[c]=(Math.pow(p,.5)*4294967296)|0;K[c++]=(Math.pow(p,1/3)*4294967296)|0}}
+  for(i=0;i<l;i++)x[i>>2]|=m.charCodeAt(i)<<(24-(i%4)*8);
+  x[l>>2]|=128<<(24-(l%4)*8);x[n-1]=l*8;
+  var W=[],r=function(v,b){return(v>>>b)|(v<<(32-b))};
+  for(var o=0;o<n;o+=16){
+    var h=H.slice();
+    for(i=0;i<64;i++){
+      if(i<16)W[i]=x[o+i];
+      else{var a15=W[i-15],a2=W[i-2],s0=r(a15,7)^r(a15,18)^(a15>>>3),s1=r(a2,17)^r(a2,19)^(a2>>>10);W[i]=(W[i-16]+s0+W[i-7]+s1)|0}
+      var t1=(h[7]+(r(h[4],6)^r(h[4],11)^r(h[4],25))+((h[4]&h[5])^(~h[4]&h[6]))+K[i]+W[i])|0,
+          t2=((r(h[0],2)^r(h[0],13)^r(h[0],22))+((h[0]&h[1])^(h[0]&h[2])^(h[1]&h[2])))|0;
+      h=[(t1+t2)|0,h[0],h[1],h[2],(h[3]+t1)|0,h[4],h[5],h[6]];
+    }
+    for(i=0;i<8;i++)H[i]=(H[i]+h[i])|0;
+  }
+  return H.map(function(v){return("00000000"+(v>>>0).toString(16)).slice(-8)}).join("");
+}
+    return msSha256;
+  })();
+  window.msVHash = function (code) { return msSha256("MS-V1|" + String(code || "").trim().toUpperCase()); };
+  window.msHash = function (s) { var a = 0xdeadbeef, b = 0x41c6ce57; for (var i = 0, c; i < s.length; i++) { c = s.charCodeAt(i); a = Math.imul(a ^ c, 2654435761); b = Math.imul(b ^ c, 1597334677); } a = Math.imul(a ^ (a >>> 16), 2246822507) ^ Math.imul(b ^ (b >>> 13), 3266489909); b = Math.imul(b ^ (b >>> 16), 2246822507) ^ Math.imul(a ^ (a >>> 13), 3266489909); return (4294967296 * (2097151 & b) + (a >>> 0)).toString(36); };
+  window.msTrackKey = function (id, phone) { return window.msHash(id + "|" + String(phone || "").replace(/\D/g, "").slice(-10)); };
+  var vsnap = null, vq = Promise.resolve();
+  window.msVc = { fail: false, code: "" };
+  function vdesired(list) { var m = {}; (Array.isArray(list) ? list : []).forEach(function (v) { if (v && v.code) m[window.msVHash(v.code)] = JSON.stringify(v); }); return m; }
+  function vsync(list) {
+    vq = vq.then(function () {
+      var want = vdesired(list), old = vsnap || {}, next = {}, ops = [], bad = null;
+      Object.keys(want).forEach(function (h) { if (old[h] === want[h]) next[h] = want[h]; else ops.push(db("PUT", "vcheck/" + h, want[h]).then(function () { next[h] = want[h]; }, function (e) { bad = e; })); });
+      Object.keys(old).forEach(function (h) { if (!(h in want)) ops.push(db("DELETE", "vcheck/" + h).then(function () {}, function (e) { next[h] = old[h]; bad = e; })); });
+      return Promise.all(ops).then(function () {
+        vsnap = next; window.msVc = { fail: !!bad, code: bad ? String(bad.message) : "" };
+        if (bad) { var t = document.getElementById("toast"); if (t) { t.textContent = "Voucher online check save nahi hua. Naye Firebase rules publish karein."; t.classList.add("on"); setTimeout(function () { t.classList.remove("on"); }, 4000); } }
+      });
+    }).catch(function () {});
+  }
+  /* Download products, vouchers and orders. msPull(false) is the light version: only the orders (every 15 s). Resolves true if something changed. */
+  window.msPull = function (all) {
     if (!ready) return Promise.reject(new Error("setup"));
-    return Promise.all([db("GET", "products"), db("GET", "vouchers"), db("GET", "orders")]).then(function (r) {
-      var pr = r[0];
-      if (typeof pr !== "string") { pr = JSON.stringify(DEFAULTS); db("PUT", "products", pr).catch(fail); }
-      raw.call(localStorage, "ms-products-pk", pr);
-      raw.call(localStorage, "ms-vouchers-pk", typeof r[1] === "string" ? r[1] : "[]");
+    var lite = all === false;
+    return Promise.all([lite ? null : db("GET", "products"), lite ? null : db("GET", "vouchers"), db("GET", "orders")]).then(function (r) {
+      var chg = { o: false, p: false, v: false };
+      if (!lite) {
+        var pr = r[0];
+        if (typeof pr !== "string") { pr = JSON.stringify(DEFAULTS); db("PUT", "products", pr).catch(fail); }
+        chg.p = localStorage.getItem("ms-products-pk") !== pr;
+        raw.call(localStorage, "ms-products-pk", pr);
+        var vs = typeof r[1] === "string" ? r[1] : "[]";
+        chg.v = localStorage.getItem("ms-vouchers-pk") !== vs;
+        raw.call(localStorage, "ms-vouchers-pk", vs);
+        try { vsync(JSON.parse(vs)); } catch (e) {}
+      }
       var o = r[2] || {}, arr = []; snap = {};
       Object.keys(o).forEach(function (id) { if (gone[id]) return; try { arr.push(JSON.parse(o[id])); snap[id] = o[id]; } catch (e) {} });
       arr.sort(function (a, b) { return String(b.placedAt).localeCompare(String(a.placedAt)); });
       var s = JSON.stringify(arr), old = localStorage.getItem("ms-orders-pk");
       raw.call(localStorage, "ms-orders-pk", s);
-      return old !== s;
+      chg.o = old !== s; window.msChg = chg;
+      return chg.o || chg.p || chg.v;
     });
+  };
+  /* A copy of everything, in the exact shape Firebase stores it (Firebase Console > Realtime Database > three dots > Import JSON puts it back). */
+  window.msBackup = function () {
+    var vou = localStorage.getItem("ms-vouchers-pk") || "[]", ords = {}, trk = {};
+    Object.keys(snap).forEach(function (id) {
+      ords[id] = snap[id];
+      try { var o = JSON.parse(snap[id]), t = { s: o.status || "pending", h: window.msTrackKey(o.id, o.customer && o.customer.phone), t: String(o.placedAt || "") }; if (o.courier) t.c = String(o.courier); if (o.tracking) t.n = String(o.tracking); trk[id] = t; } catch (e) {}
+    });
+    var out = { products: localStorage.getItem("ms-products-pk") || "[]", vouchers: vou, orders: ords, track: trk };
+    try { out.vcheck = vdesired(JSON.parse(vou)); } catch (e) {}
+    return out;
+  };
+  /* Forgot password: Firebase emails a reset link. The answer never says whether the email exists. */
+  window.msReset = function (email) {
+    if (!ready) return Promise.reject(new Error("setup"));
+    return fetch("https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=" + encodeURIComponent(KEY), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ requestType: "PASSWORD_RESET", email: email }) })
+      .then(function (r) { return r.json(); }).then(function (j) {
+        var m = String(j && j.error && j.error.message || "");
+        if (!m || /EMAIL_NOT_FOUND/.test(m)) return true;
+        throw new Error(/TOO_MANY/.test(m) ? "many" : "fail");
+      });
   };
   window.msDb = db;
   /* Check an email + password against Firebase WITHOUT changing the current login (asked before an order is deleted). */
@@ -207,9 +284,9 @@ window.MS_KEY = "AIzaSyCKHqm-_cjIxPJp403wB-1A8g5nF43P_GY";   // e.g. AIzaSy...
     raw.call(this, k, v);
     if (this !== localStorage || !ready) return;
     if (k === "ms-products-pk") db("PUT", "products", v).catch(fail);
-    else if (k === "ms-vouchers-pk") db("PUT", "vouchers", v).catch(fail);
+    else if (k === "ms-vouchers-pk") { db("PUT", "vouchers", v).catch(fail); try { vsync(JSON.parse(v)); } catch (e) {} }
     else if (k === "ms-orders-pk") {
-      try { JSON.parse(v).forEach(function (o) { if (gone[o.id]) return; var s = JSON.stringify(o), old = snap[o.id], ps = null; try { ps = old ? JSON.parse(old).status : null; } catch (e) {} if (old !== s) { snap[o.id] = s; db("PUT", "orders/" + o.id, s).catch(fail); if (ps !== o.status) db("PUT", "track/" + o.id + "/s", o.status).catch(function () {}); } }); } catch (e) {}
+      try { JSON.parse(v).forEach(function (o) { if (gone[o.id]) return; var s = JSON.stringify(o), old = snap[o.id], ps = null; try { ps = old ? JSON.parse(old).status : null; } catch (e) {} if (old !== s) { snap[o.id] = s; db("PUT", "orders/" + o.id, s).catch(fail); if (ps !== o.status) db("PUT", "track/" + o.id + "/s", o.status).catch(function () {}); var po = null; try { po = old ? JSON.parse(old) : null; } catch (e) {} [["courier", "c"], ["tracking", "n"]].forEach(function (f) { var nv = String(o[f[0]] || ""), ov = po ? String(po[f[0]] || "") : ""; if (nv !== ov) db("PUT", "track/" + o.id + "/" + f[1], nv).catch(function () {}); }); } }); } catch (e) {}
     }
   };
 })();
@@ -230,7 +307,9 @@ let photo="",editId=null;
 const descEditor=p=>`<div class="card" style="margin-top:-4px"><label>Description for “${esc(p.name)}”<textarea id="de" rows="6" maxlength="1500" placeholder="Material, size, features, what is in the box…">${esc(p.desc||"")}</textarea></label><div class="acts"><button class="btn pri" data-a="dsave" data-id="${esc(p.id)}">Save description</button><button class="btn" data-a="dcancel">Cancel</button></div></div>`;
 const prevHTML=()=>photo?`<img class="thumb" src="${photo}" alt="Photo preview"><button class="btn bad" data-a="rmph">Remove photo</button>`:"";
 const shrink=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const s=Math.min(1,640/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=Math.round(i.width*s);c.height=Math.round(i.height*s);c.getContext("2d").drawImage(i,0,0,c.width,c.height);ok(c.toDataURL("image/jpeg",.8))};i.onerror=no;i.src=r.result};r.onerror=no;r.readAsDataURL(f)});
-const ST={pending:["Pending","p"],confirmed:["Confirmed","c"],dispatched:["Dispatched","d"],delivered:["Delivered","ok"],cancelled:["Cancelled","x"]};
+const ST={pending:["Pending","p"],confirmed:["Confirmed","c"],dispatched:["Dispatched","d"],delivered:["Delivered","ok"],cancelled:["Cancelled","x"],returned:["Returned","x"],refunded:["Refunded","x"]};
+const MORE={delivered:[["returned","Mark returned"]],returned:[["refunded","Mark refunded"]]};
+const DEAD=new Set(["cancelled","returned","refunded"]);
 const NEXT={pending:["confirmed","Confirm order"],confirmed:["dispatched","Mark dispatched"],dispatched:["delivered","Mark delivered"]};
 const PAYN={cod:"Cash on Delivery",easypaisa:"Easypaisa",jazzcash:"JazzCash"};
 const CATN={bats:"Bats",balls:"Balls",footballs:"Footballs",footwear:"Footwear",gloves:"Gloves",helmets:"Helmets",accessories:"Accessories"};
@@ -243,7 +322,7 @@ const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("on");clearT
 function lock(){
   try{navigator.clearAppBadge&&navigator.clearAppBadge()}catch(e){}
   splashOff();
-  $("#app").innerHTML=`<div class="card gate"><h1>Owner desk</h1><p class="mute">Sign in with your owner email and password to manage orders and products.</p><label>Email<input id="em" type="email" autocomplete="username"></label><label style="margin-top:12px">Password<input id="pw" type="password" autocomplete="current-password"></label><p id="err" class="err" role="alert"></p><button class="btn pri" data-a="login">Unlock</button></div>`;
+  $("#app").innerHTML=`<div class="card gate"><h1>Owner desk</h1><p class="mute">Sign in with your owner email and password to manage orders and products.</p><label>Email<input id="em" type="email" autocomplete="username"></label><label style="margin-top:12px">Password<input id="pw" type="password" autocomplete="current-password"></label><p id="err" class="err" role="alert"></p><button class="btn pri" data-a="login">Unlock</button><button class="btn" data-a="forgot" style="margin-top:8px">Password bhool gaye?</button></div>`;
 }
 function boot(){
   $("#app").innerHTML=`<div class="card gate"><p class="mute">Loading your shop data…</p></div>`;
@@ -262,29 +341,103 @@ function badge(){
 function main(){
   $("#app").innerHTML=`<div class="top"><h1>Malik Sports · Owner</h1><div class="row g"><a href="https://maliksports.github.io/Malik-Sports/">View shop</a><button class="btn" data-a="lock">Lock</button></div></div>
   ${alertsHTML()}
-  <div class="tabs"><button class="tab${tab==="orders"?" on":""}" data-a="tab" data-v="orders">Orders<span id="nb"></span></button><button class="tab${tab==="products"?" on":""}" data-a="tab" data-v="products">Products</button><button class="tab${tab==="vouchers"?" on":""}" data-a="tab" data-v="vouchers">Vouchers</button><button class="tab${tab==="report"?" on":""}" data-a="tab" data-v="report">Report</button></div>`+(tab==="orders"?ordersView():tab==="vouchers"?vouchersView():tab==="report"?reportView():productsView());
+  <div class="tabs"><button class="tab${tab==="orders"?" on":""}" data-a="tab" data-v="orders">Orders<span id="nb"></span></button><button class="tab${tab==="products"?" on":""}" data-a="tab" data-v="products">Products</button><button class="tab${tab==="vouchers"?" on":""}" data-a="tab" data-v="vouchers">Vouchers</button><button class="tab${tab==="report"?" on":""}" data-a="tab" data-v="report">Report</button></div>`+(tab==="orders"?ordersView():tab==="vouchers"?vouchersView():tab==="report"?reportView():productsView())+`<p class="mute sm" style="text-align:center;margin:28px 0 0">Malik Controller · version ${esc(window.MS_VERSION||"")}</p>`;
   badge();
   splashOff();
+}
+/* ---------- Orders: today strip, search, date filter, "show more" ---------- */
+let oq="",odt="all",olim=50;
+const statCard=(k,v,s)=>`<div class="card stat" style="margin:0"><div class="mute sm">${k}</div><div class="total">${v}</div>${s?`<div class="mute sm">${s}</div>`:""}</div>`;
+const DT={all:"Sab tareekhein",today:"Aaj",7:"Pichle 7 din",30:"Pichle 30 din"};
+const COURIERS=["TCS","Leopards","Trax","M&P","PostEx","Call Courier","BlueEx","Pakistan Post"];
+function inRange(x){
+  if(odt==="all")return true;
+  const t=new Date(x.placedAt).getTime();if(!(t>0))return true;
+  const d0=new Date();d0.setHours(0,0,0,0);
+  return t>=(odt==="today"?d0.getTime():d0.getTime()-(+odt-1)*864e5);
+}
+function orderMatch(x){
+  if(!oq)return true;
+  const q=oq.toLowerCase(),c=x.customer||{},digits=/^[\d\s+\-()]+$/.test(q)?q.replace(/\D/g,"").replace(/^(92|0)/,""):"";
+  const hay=[x.id,c.name,c.phone,c.email,c.city,c.address,x.pay&&x.pay.txn,x.tracking,x.courier,x.note,(x.lines||[]).map(l=>l.name).join(" ")].join(" ").toLowerCase();
+  return hay.includes(q)||(digits.length>=4&&String(c.phone||"").replace(/\D/g,"").includes(digits));
+}
+const filteredOrders=()=>rd("ms-orders-pk",[]).filter(x=>(flt==="all"||x.status===flt)&&inRange(x)&&orderMatch(x));
+function olistHTML(){
+  const l=filteredOrders(),shown=l.slice(0,olim),filtered=oq||odt!=="all"||flt!=="all";
+  if(!l.length)return `<div class="card empty"><b>${filtered?"Koi order nahi mila":"No orders here yet"}</b><p class="mute">${filtered?"Search ya filter badal kar dekhein.":"When a customer places an order in the shop, it shows up here."}</p></div>`;
+  return shown.map(orderCard).join("")+(l.length>shown.length?`<button class="btn" data-a="omore" style="width:100%">Aur dikhayein (${l.length-shown.length} baqi)</button>`:`<p class="mute sm" style="text-align:center">${l.length} order${l.length===1?"":"s"}</p>`);
+}
+function todayStrip(o){
+  const d0=new Date();d0.setHours(0,0,0,0);const t0=d0.getTime();
+  const td=o.filter(x=>new Date(x.placedAt).getTime()>=t0),live=td.filter(x=>!DEAD.has(x.status));
+  const sales=live.reduce((s,x)=>s+((x.totals&&x.totals.total)||0),0),pend=o.filter(x=>x.status==="pending").length;
+  const PL=rd("ms-products-pk",[]),tracked=Array.isArray(PL)?PL.filter(p=>typeof p.stock==="number"):[],low=tracked.filter(p=>p.stock<=3);
+  const lowTxt=low.length?low.slice(0,3).map(p=>esc(p.name)+" ("+p.stock+")").join(", "):tracked.length?"Sab ka stock theek":"Stock set karein (Products tab)";
+  return `<div class="stats" style="margin-bottom:12px">${statCard("Aaj ke orders",td.length,td.length>live.length?(td.length-live.length)+" cancel/return":"")}${statCard("Aaj ki sales",money(sales),"cancel ke baghair")}${statCard("Pending",pend,"confirm karna baqi")}${statCard("Kam stock",low.length,lowTxt)}</div>`;
 }
 function ordersView(){
   const o=rd("ms-orders-pk",[]),cnt=s=>s==="all"?o.length:o.filter(x=>x.status===s).length;
   const chips=["all",...Object.keys(ST)].map(s=>`<button class="chip${flt===s?" on":""}" data-a="flt" data-v="${s}">${s==="all"?"All":ST[s][0]} ${cnt(s)}</button>`).join("");
-  const list=o.filter(x=>flt==="all"||x.status===flt);
-  return `<div class="chips">${chips}</div>`+(list.length?list.map(orderCard).join(""):`<div class="card empty"><b>No orders here yet</b><p class="mute">When a customer places an order in the shop, it shows up here.</p></div>`);
+  return todayStrip(o)+`<div class="card" style="padding:12px"><div class="grid"><label>Order dhoondhein<input id="osq" type="search" value="${esc(oq)}" placeholder="Naam, phone, order no., city, tracking…" autocomplete="off" enterkeyhint="search"></label><label>Tareekh<select id="odt">${Object.entries(DT).map(([k,v])=>`<option value="${k}"${String(odt)===k?" selected":""}>${v}</option>`).join("")}</select></label></div></div><div class="chips">${chips}</div><div id="olist">${olistHTML()}</div>`;
 }
 function orderCard(x){
-  const c=x.customer,[lbl,cls]=ST[x.status]||ST.pending,n=NEXT[x.status],id=esc(x.id);
+  const c=x.customer,[lbl,cls]=ST[x.status]||ST.pending,n=NEXT[x.status],id=esc(x.id),mo=MORE[x.status]||[],cod=x.pay.method==="cod";
   const ph=String(c.phone).replace(/\D/g,"").replace(/^92/,"0");
   const when=new Date(x.placedAt).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
+  const payLine=cod?"":x.payOk?`<br><b style="color:var(--acc)">Payment verified ✓</b>`:`<br><b style="color:#ffb74d">Payment abhi verify nahi hui</b>`;
+  const ship=(x.courier||x.tracking)?`<div class="sm" style="margin:10px 0 0">Courier: <b>${esc(x.courier||"-")}</b>${x.tracking?` · Tracking: <b>${esc(x.tracking)}</b>`:""}</div>`:"";
+  const note=x.note?`<div class="sm" style="margin:10px 0 0;padding:8px 10px;border-radius:8px;background:#2f2a14;color:#ffe9a6">Note: ${esc(x.note)}</div>`:"";
+  const open=x.status==="pending"||x.status==="confirmed";
   return `<article class="card"><div class="row"><div><span class="id">#${id}</span><div class="mute sm">${when}</div></div><div class="row g" style="gap:8px"><span class="badge ${cls}">${lbl}</span><button class="btn kebab" data-a="omenu" data-id="${id}" aria-label="More options for order ${id}" aria-haspopup="dialog">&#8942;</button></div></div>
   <div class="cust"><b>${esc(c.name)}</b><div><a href="tel:${esc(ph)}">${esc(ph)}</a> · <a href="https://wa.me/92${esc(ph.slice(1))}" target="_blank" rel="noopener">WhatsApp</a> · <a href="mailto:${esc(c.email)}">${esc(c.email)}</a></div><div class="mute">${esc(c.address)}, ${esc(c.city)}</div></div>
   <ul class="items">${x.lines.map(l=>`<li><span>${esc(l.name)} × ${l.qty}</span><span>${money(l.price*l.qty)}</span></li>`).join("")}</ul>${x.voucher?`<div class="sm mute" style="margin:-4px 0 10px">Voucher ${esc(x.voucher.code)}: -${money(x.voucher.discount)}</div>`:""}
-  <div class="row g"><div class="mute sm">${esc(PAYN[x.pay.method]||x.pay.method)}${x.pay.txn?` · ID <b>${esc(x.pay.txn)}</b>`:""}<br>${x.delivery==="express"?"Express":"Standard"} delivery</div><div class="total">${money(x.totals.total)}</div></div>
-  <div class="acts">${n?`<button class="btn pri" data-a="st" data-id="${id}" data-v="${n[0]}">${n[1]}</button>`:""}${x.status==="pending"||x.status==="confirmed"?`<button class="btn bad" data-a="st" data-id="${id}" data-v="cancelled">Cancel order</button>`:""}</div></article>`;
+  <div class="row g"><div class="mute sm">${esc(PAYN[x.pay.method]||x.pay.method)}${x.pay.txn?` · ID <b>${esc(x.pay.txn)}</b>`:""}${payLine}<br>${x.delivery==="express"?"Express":"Standard"} delivery</div><div class="total">${money(x.totals.total)}</div></div>${ship}${note}
+  <div class="acts">${n?`<button class="btn pri" data-a="st" data-id="${id}" data-v="${n[0]}">${n[1]}</button>`:""}${open?`<button class="btn bad" data-a="st" data-id="${id}" data-v="cancelled">Cancel order</button>`:""}${mo.map(m=>`<button class="btn" data-a="st" data-id="${id}" data-v="${m[0]}">${m[1]}</button>`).join("")}${!cod&&!x.payOk&&open?`<button class="btn" data-a="payok" data-id="${id}">Payment verify ho gayi</button>`:""}</div></article>`;
+}
+/* Stock: confirming an order takes its quantities off the products that have a stock number; cancelling gives them back. */
+function stockMove(x,dir){
+  const PL=rd("ms-products-pk",null);if(!Array.isArray(PL))return false;let ch=false;
+  (x.lines||[]).forEach(l=>{const p=PL.find(q=>q.id===l.id);if(p&&typeof p.stock==="number"){p.stock=Math.max(0,p.stock+dir*(+l.qty||0));ch=true}});
+  if(ch)wr("ms-products-pk",PL);return ch;
+}
+function setStatus(x,all,v){
+  if(v==="confirmed"&&!x.stockCut){if(stockMove(x,-1))x.stockCut=true}
+  else if(v==="cancelled"&&x.stockCut){stockMove(x,1);delete x.stockCut}
+  x.status=v;wr("ms-orders-pk",all);main();
+  const id=x.id,msg="Order #"+id+" "+ST[v][0].toLowerCase();toast(msg);
+  (window.msMail?msMail(x,v):Promise.resolve("off")).then(r=>toast(msg+(r==="ok"?" · email sent":r==="off"?" · email not set up yet":" · email could not be sent")));
+}
+function courierSheet(x,go){
+  sheet(`<p style="margin:0 0 10px"><b>#${esc(x.id)}</b> · ${esc(x.customer.name)}</p><label>Courier ka naam<input id="cr" list="crl" maxlength="30" value="${esc(x.courier||"")}" placeholder="jaise TCS" autocomplete="off"></label><datalist id="crl">${COURIERS.map(c=>`<option value="${esc(c)}">`).join("")}</datalist><label style="margin-top:10px">Tracking number<input id="cn" maxlength="30" value="${esc(x.tracking||"")}" placeholder="courier ki receipt par likha number" autocomplete="off" autocapitalize="characters"></label><p class="mute sm" style="margin:10px 0 0">Ye customer ko Track page par nazar aayega${go?" aur dispatch ki email mein jayega":""}. Khali chhor sakte hain.</p>`,
+    go?"Dispatch karein":"Courier / tracking",
+    `<div class="dlg-acts"><button class="btn pri" data-a="cour-save" data-id="${esc(x.id)}"${go?' data-go="1"':""}>${go?"Dispatched mark karein":"Save karein"}</button><button class="btn" data-a="sheet-close">Band karein</button></div>`);
+}
+function noteSheet(x){
+  sheet(`<p style="margin:0 0 10px"><b>#${esc(x.id)}</b> · ${esc(x.customer.name)}</p><label>Sirf aap ke liye note (customer ko nazar nahi aata)<textarea id="nt" rows="4" maxlength="300" placeholder="jaise: phone nahi utha raha, shaam ko dobara call karna">${esc(x.note||"")}</textarea></label>`,"Apna note",
+    `<div class="dlg-acts"><button class="btn pri" data-a="note-save" data-id="${esc(x.id)}">Save karein</button><button class="btn" data-a="sheet-close">Band karein</button></div>`);
+}
+/* Packing slip (A5) for the parcel */
+function slipHTML(x){
+  const c=x.customer||{},T=x.totals||{},cod=x.pay&&x.pay.method==="cod",shop=(window.MS_EMAIL&&window.MS_EMAIL.shop)||"Malik Sports",pm=esc(PAYN[x.pay.method]||x.pay.method);
+  const when=new Date(x.placedAt).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+  const rows=(x.lines||[]).map(l=>`<tr><td>${esc(l.name)}</td><td style="text-align:center">${l.qty}</td><td style="text-align:right">${money(l.price*l.qty)}</td></tr>`).join("");
+  const due=cod?`COLLECT ON DELIVERY: ${money(T.total)}`:x.payOk?`PREPAID (${pm}) - collect Rs 0`:`PAYMENT NOT VERIFIED YET (${pm})`;
+  const line=(k,v)=>`<tr class="t"><td colspan="2" style="text-align:right">${k}</td><td style="text-align:right">${v}</td></tr>`;
+  const ship=(T.shipping||0)+(T.tax||0);
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Slip ${esc(x.id)}</title><style>@page{size:A5;margin:10mm}*{box-sizing:border-box}body{font:13px/1.45 Arial,Helvetica,sans-serif;color:#000;margin:0}.top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px}.shop{font-size:20px;font-weight:700}.id{font-size:20px;font-weight:700;text-align:right}.box{border:1px solid #000;border-radius:4px;padding:8px 10px;margin:8px 0}.lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#444}.nm{font-size:16px;font-weight:700}table{width:100%;border-collapse:collapse;margin:6px 0}th,td{border-bottom:1px solid #999;padding:5px 4px;text-align:left;vertical-align:top}th{font-size:11px}tr.t td{border-bottom:0;padding:2px 4px}tr.g td{font-weight:700;font-size:15px;border-top:2px solid #000;border-bottom:0}.due{font-size:17px;font-weight:700;border:2px solid #000;padding:8px;text-align:center;margin-top:10px}.sm{font-size:11px;color:#333;margin-top:8px}</style></head><body><div class="top"><div><div class="shop">${esc(shop)}</div><div class="sm" style="margin:2px 0 0">Packing slip</div></div><div><div class="id">#${esc(x.id)}</div><div class="sm" style="margin:2px 0 0;text-align:right">${esc(when)}</div></div></div><div class="box"><div class="lbl">Ship to</div><div class="nm">${esc(c.name)}</div><div>${esc(c.phone)}</div><div>${esc(c.address)}</div><div><b>${esc(c.city)}</b></div></div><table><tr><th>Item</th><th style="text-align:center;width:36px">Qty</th><th style="text-align:right;width:80px">Amount</th></tr>${rows}${line("Subtotal",money(T.sub))}${x.voucher?line("Voucher "+esc(x.voucher.code),"-"+money(x.voucher.discount)):""}${line("Delivery",money(ship))}<tr class="g"><td colspan="2" style="text-align:right">Total</td><td style="text-align:right">${money(T.total)}</td></tr></table><div class="due">${due}</div>${(x.courier||x.tracking)?`<div class="sm">Courier: <b>${esc(x.courier||"-")}</b>${x.tracking?" · Tracking: <b>"+esc(x.tracking)+"</b>":""}</div>`:""}<div class="sm">Thank you for shopping with ${esc(shop)}.</div></body></html>`;
+}
+function printSlip(x){
+  const f=document.createElement("iframe");f.id="slip-frame";f.setAttribute("aria-hidden","true");f.style.cssText="position:fixed;right:0;bottom:0;width:0;height:0;border:0";document.body.appendChild(f);
+  const d=f.contentWindow.document;d.open();d.write(slipHTML(x));d.close();
+  setTimeout(()=>{try{f.contentWindow.focus();f.contentWindow.print()}catch(e){toast("Print nahi ho saka")}setTimeout(()=>f.remove(),120000)},350);
+}
+function vcWarn(){
+  return window.msVc&&window.msVc.fail?`<div class="card" style="box-shadow:inset 0 0 0 1px var(--err)"><b style="color:var(--err)">Voucher customers ke liye abhi nahi chal rahe</b><p class="mute sm" style="margin:6px 0 0">Firebase ka naya <b>rules</b> (firebase-rules.txt) publish karna baqi hai. Publish karne ke baad is page ko refresh karein.</p></div>`:"";
 }
 const dayKey=d=>d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
 function reportView(){
-  const all=rd("ms-orders-pk",[]),live=all.filter(x=>x.status!=="cancelled"),tot=a=>a.reduce((s,x)=>s+((x.totals&&x.totals.total)||0),0);
+  const all=rd("ms-orders-pk",[]),live=all.filter(x=>!DEAD.has(x.status)),tot=a=>a.reduce((s,x)=>s+((x.totals&&x.totals.total)||0),0);
   const delivered=all.filter(x=>x.status==="delivered"),pending=all.filter(x=>x.status==="pending");
   const disc=live.reduce((s,x)=>s+(x.voucher?x.voucher.discount:0),0),avg=live.length?tot(live)/live.length:0;
   const stat=(k,v,s)=>`<div class="card stat" style="margin:0"><div class="mute sm">${k}</div><div class="total">${v}</div>${s?`<div class="mute sm">${s}</div>`:""}</div>`;
@@ -297,17 +450,17 @@ function reportView(){
   const pay={};live.forEach(x=>{const m=PAYN[x.pay.method]||x.pay.method;pay[m]=(pay[m]||0)+1});
   const st=Object.keys(ST).map(s=>`<span class="badge ${ST[s][1]}">${ST[s][0]} ${all.filter(x=>x.status===s).length}</span>`).join(" ");
   if(!all.length)return `<div class="card empty"><b>No sales yet</b><p class="mute">When customers place orders, your sales report shows up here.</p></div>`;
-  return `<div class="stats">${stat("Orders",all.length,pending.length+" waiting for confirmation")}${stat("Sales",money(tot(live)),"With delivery, no cancelled")}${stat("Delivered",money(tot(delivered)),delivered.length+" orders")}${stat("Average order",money(avg),disc?money(disc)+" given as vouchers":"")}</div>
+  return `<div class="stats">${stat("Orders",all.length,pending.length+" waiting for confirmation")}${stat("Sales",money(tot(live)),"cancel/return ke baghair")}${stat("Delivered",money(tot(delivered)),delivered.length+" orders")}${stat("Average order",money(avg),disc?money(disc)+" given as vouchers":"")}</div>
   <div class="card" style="margin-top:12px"><h2>Last 7 days</h2><div class="mute sm">Bar height is sales. The number on top is orders.</div><div class="bars">${bars}</div></div>
   <div class="card"><h2>Best sellers</h2>${top.length?top.map(([n,v])=>`<div style="margin-bottom:10px"><div class="row g"><span>${esc(n)}</span><b>${v.q} sold</b></div><div class="meter"><i style="width:${Math.round(v.q/topMax*100)}%"></i></div><div class="mute sm">${money(v.r)}</div></div>`).join(""):`<p class="mute">Nothing sold yet.</p>`}</div>
   <div class="card"><h2>Orders by status</h2><div class="acts" style="margin-top:0">${st}</div><h2 class="h2">Payment methods</h2><div class="acts" style="margin-top:0">${Object.entries(pay).map(([k,v])=>`<span class="badge">${esc(k)} ${v}</span>`).join(" ")||`<span class="mute">None yet</span>`}</div></div>
-  <button class="btn pri" data-a="csv" style="width:100%">Download all orders (CSV)</button>`;
+  <button class="btn pri" data-a="csv" style="width:100%">Download all orders (CSV)</button><button class="btn" data-a="backup" style="width:100%;margin-top:8px">Backup download karein (sab data)</button><p class="mute sm" style="margin:8px 0 0">Backup file mein products, vouchers aur orders hain. Zaroorat par Firebase Console mein Realtime Database, teen nuqtay, <b>Import JSON</b> se wapas daal sakte hain. Har hafte ek baar download kar lein.</p>`;
 }
 function csvDownload(){
   const o=rd("ms-orders-pk",[]);if(!o.length){toast("No orders to download yet");return}
   const cell=v=>{let s=String(v==null?"":v);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'};
-  const head=["Order","Placed","Status","Name","Phone","Email","City","Address","Items","Payment","Transaction ID","Delivery","Subtotal","Voucher","Discount","Delivery fee","Total"];
-  const rows=o.map(x=>[x.id,x.placedAt,x.status,x.customer.name,x.customer.phone,x.customer.email,x.customer.city,x.customer.address,x.lines.map(l=>l.name+" x"+l.qty).join("; "),PAYN[x.pay.method]||x.pay.method,x.pay.txn||"",x.delivery,x.totals.sub,x.voucher?x.voucher.code:"",x.voucher?x.voucher.discount:0,(x.totals.shipping||0)+(x.totals.tax||0),x.totals.total]);
+  const head=["Order","Placed","Status","Name","Phone","Email","City","Address","Items","Payment","Transaction ID","Delivery","Subtotal","Voucher","Discount","Delivery fee","Total","Courier","Tracking number","Payment verified","Note"];
+  const rows=o.map(x=>[x.id,x.placedAt,x.status,x.customer.name,x.customer.phone,x.customer.email,x.customer.city,x.customer.address,x.lines.map(l=>l.name+" x"+l.qty).join("; "),PAYN[x.pay.method]||x.pay.method,x.pay.txn||"",x.delivery,x.totals.sub,x.voucher?x.voucher.code:"",x.voucher?x.voucher.discount:0,(x.totals.shipping||0)+(x.totals.tax||0),x.totals.total,x.courier||"",x.tracking||"",x.pay.method==="cod"?"":(x.payOk?"yes":"no"),x.note||""]);
   const blob=new Blob(["﻿"+[head,...rows].map(r=>r.map(cell).join(",")).join("\r\n")],{type:"text/csv;charset=utf-8"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="malik-sports-orders-"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Orders file downloaded");
 }
@@ -358,9 +511,9 @@ function alertsHTML(){
 function productsView(){
   const P=rd("ms-products-pk",null);
   if(!Array.isArray(P))return `<div class="card empty"><b>Shop products not loaded yet</b><p class="mute"><a href="https://maliksports.github.io/Malik-Sports/">Open the shop</a> once in this browser, then come back here.</p></div>`;
-  return `<div class="card"><h2>Add a product</h2><div class="grid"><label>Name<input id="pn" maxlength="60" placeholder="e.g. Hard Tennis Ball"></label><label>Category<select id="pc">${Object.entries(CATN).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select></label><label>Price (Rs)<input id="pp" type="number" min="1" step="1" inputmode="numeric"></label><label>Label (optional)<input id="pt" maxlength="14" placeholder="New, Sale"></label></div><label style="margin-top:12px">Description (optional)<textarea id="pd" rows="4" maxlength="1500" placeholder="Tell customers about this product: material, size, features, what is in the box…"></textarea></label>
+  return `<div class="card"><h2>Add a product</h2><div class="grid"><label>Name<input id="pn" maxlength="60" placeholder="e.g. Hard Tennis Ball"></label><label>Category<select id="pc">${Object.entries(CATN).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select></label><label>Price (Rs)<input id="pp" type="number" min="1" step="1" inputmode="numeric"></label><label>Label (optional)<input id="pt" maxlength="14" placeholder="New, Sale"></label><label>Stock (optional)<input id="ps" type="number" min="0" step="1" inputmode="numeric" placeholder="khali = unlimited"></label></div><label style="margin-top:12px">Description (optional)<textarea id="pd" rows="4" maxlength="1500" placeholder="Tell customers about this product: material, size, features, what is in the box…"></textarea></label>
   <label style="display:flex;align-items:center;gap:10px;margin-top:14px;color:var(--fg)"><input id="pv" type="checkbox" checked style="display:inline-block;width:22px;height:22px;margin:0;padding:0;accent-color:#00fe66">Vouchers can be used on this product</label><div style="margin-top:12px"><span class="mute sm">Photo (optional)</span><div class="acts" style="margin-top:6px"><button class="btn" data-a="cam">Take photo</button><button class="btn" data-a="gal">Choose from gallery</button></div><div id="prev" class="acts g">${prevHTML()}</div><input id="ph1" type="file" accept="image/*" capture="environment" hidden><input id="ph2" type="file" accept="image/*" hidden></div><p id="perr" class="err" role="alert"></p><button class="btn pri" data-a="add">Add to shop</button></div>
-  <h2 class="h2">In the shop (${P.length})</h2><p class="mute sm">Customers see changes when they open or reload the shop.</p>`+(P.length?P.map(p=>`<div class="card row g" style="flex-wrap:wrap"><div class="row g">${p.img?`<img class="thumb" src="${p.img}" alt="">`:""}<div><b>${esc(p.name)}</b><div class="mute sm">${esc(CATN[p.cat]||p.cat)} · ${money(p.price)}</div></div></div><div class="acts" style="margin:0"><button class="btn${p.noVoucher?"":" pri"}" data-a="vtog" data-id="${esc(p.id)}">Voucher: ${p.noVoucher?"OFF":"ON"}</button><button class="btn" data-a="desc" data-id="${esc(p.id)}">Description${p.desc?" ✓":""}</button><button class="btn" data-a="price" data-id="${esc(p.id)}">Set price</button><button class="btn bad" data-a="del" data-id="${esc(p.id)}">Delete</button></div></div>${editId===p.id?descEditor(p):""}`).join(""):`<div class="card empty">No products in the shop. Add one above.</div>`);
+  <h2 class="h2">In the shop (${P.length})</h2><p class="mute sm">Customers see changes when they open or reload the shop.</p>`+(P.length?P.map(p=>`<div class="card row g" style="flex-wrap:wrap"><div class="row g">${p.img?`<img class="thumb" src="${p.img}" alt="">`:""}<div><b>${esc(p.name)}</b><div class="mute sm">${esc(CATN[p.cat]||p.cat)} · ${money(p.price)}${typeof p.stock==="number"?(p.stock>0?" · Stock "+p.stock:` · <b style="color:var(--err)">Sold out</b>`):""}</div></div></div><div class="acts" style="margin:0"><button class="btn${typeof p.stock==="number"&&p.stock<=3?" bad":""}" data-a="stock" data-id="${esc(p.id)}">Stock</button><button class="btn${p.noVoucher?"":" pri"}" data-a="vtog" data-id="${esc(p.id)}">Voucher: ${p.noVoucher?"OFF":"ON"}</button><button class="btn" data-a="desc" data-id="${esc(p.id)}">Description${p.desc?" ✓":""}</button><button class="btn" data-a="price" data-id="${esc(p.id)}">Set price</button><button class="btn bad" data-a="del" data-id="${esc(p.id)}">Delete</button></div></div>${editId===p.id?descEditor(p):""}`).join(""):`<div class="card empty">No products in the shop. Add one above.</div>`);
 }
 
 const left=ms=>{const m=Math.floor(ms/6e4),d=Math.floor(m/1440),h=Math.floor(m%1440/60);return d?`${d}d ${h}h left`:`${h}h ${m%60}m left`};
@@ -368,7 +521,7 @@ const scope=v=>{if(!v.products||!v.products.length)return"All products";const P=
 const fmt=t=>new Date(t).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
 function vouchersView(){
   const PL=rd("ms-products-pk",[]),V=rd("ms-vouchers-pk",[]).slice().sort((x,y)=>y.createdAt-x.createdAt),now=Date.now();
-  return `<div class="card"><h2>Create a voucher</h2><p class="mute sm" style="margin:-4px 0 12px">Vouchers work on every product, except products set to “Voucher: OFF” in the Products tab.</p><div class="grid">
+  return vcWarn()+`<div class="card"><h2>Create a voucher</h2><p class="mute sm" style="margin:-4px 0 12px">Vouchers work on every product, except products set to “Voucher: OFF” in the Products tab.</p><div class="grid">
   <label>Voucher code<div class="row g" style="gap:8px"><input id="vc" maxlength="20" autocapitalize="characters" autocomplete="off" placeholder="e.g. EID10"><button class="btn" data-a="suggest" style="white-space:nowrap">Suggest</button></div></label>
   <label>Discount<input id="vv" type="number" min="1" step="1" inputmode="numeric"></label>
   <label>Discount type<select id="vt"><option value="pct">Percent (%)</option><option value="amt">Fixed amount (Rs)</option></select></label>
@@ -391,9 +544,50 @@ document.addEventListener("click",e=>{
   else if(a==="install")doInstall()
   else if(a==="sheet-close"){const o=$("#install-sheet");if(o)o.remove()}
   else if(a==="omenu"){
-    const x=rd("ms-orders-pk",[]).find(o=>o.id===id);if(!x)return;
+    const x=rd("ms-orders-pk",[]).find(o=>o.id===id);if(!x)return;const cod=x.pay&&x.pay.method==="cod";
     sheet(`<span class="mute">${esc(x.customer.name)} · ${money(x.totals.total)} · ${esc((ST[x.status]||ST.pending)[0])}</span>`,"Order #"+esc(x.id),
-      `<div class="dlg-acts"><button class="btn" data-a="ocopy" data-id="${esc(x.id)}">Order number copy karein</button><button class="btn bad" data-a="odel" data-id="${esc(x.id)}">Delete order</button><button class="btn" data-a="sheet-close">Band karein</button></div>`);
+      `<div class="dlg-acts"><button class="btn" data-a="slip" data-id="${esc(x.id)}">Packing slip print karein</button><button class="btn" data-a="cour" data-id="${esc(x.id)}">Courier / tracking number${x.tracking?" ✓":""}</button><button class="btn" data-a="note" data-id="${esc(x.id)}">Apna note likhein${x.note?" ✓":""}</button>${cod?"":`<button class="btn" data-a="payok" data-id="${esc(x.id)}">${x.payOk?"Payment verified hata dein":"Payment verified mark karein"}</button>`}<button class="btn" data-a="ocopy" data-id="${esc(x.id)}">Order number copy karein</button><button class="btn bad" data-a="odel" data-id="${esc(x.id)}">Delete order</button><button class="btn" data-a="sheet-close">Band karein</button></div>`);
+  }
+  else if(a==="slip"){const x=rd("ms-orders-pk",[]).find(o=>o.id===id);if(!x)return;const o=$("#install-sheet");if(o)o.remove();printSlip(x)}
+  else if(a==="cour"){const x=rd("ms-orders-pk",[]).find(o=>o.id===id);if(!x)return;courierSheet(x,false)}
+  else if(a==="note"){const x=rd("ms-orders-pk",[]).find(o=>o.id===id);if(!x)return;noteSheet(x)}
+  else if(a==="cour-save"){
+    const all=rd("ms-orders-pk",[]),x=all.find(o=>o.id===id);if(!x)return;
+    const c=($("#cr").value||"").trim().slice(0,30),n=($("#cn").value||"").trim().slice(0,30);
+    if(c)x.courier=c;else delete x.courier;if(n)x.tracking=n;else delete x.tracking;
+    const go=t.dataset.go==="1",o=$("#install-sheet");if(o)o.remove();
+    if(go)setStatus(x,all,"dispatched");else{wr("ms-orders-pk",all);main();toast("Courier / tracking save ho gaya")}
+  }
+  else if(a==="note-save"){
+    const all=rd("ms-orders-pk",[]),x=all.find(o=>o.id===id);if(!x)return;
+    const n=($("#nt").value||"").trim().slice(0,300);if(n)x.note=n;else delete x.note;
+    const o=$("#install-sheet");if(o)o.remove();wr("ms-orders-pk",all);main();toast(n?"Note save ho gaya":"Note hata diya")
+  }
+  else if(a==="payok"){
+    const all=rd("ms-orders-pk",[]),x=all.find(o=>o.id===id);if(!x)return;
+    if(x.payOk)delete x.payOk;else x.payOk=true;
+    const o=$("#install-sheet");if(o)o.remove();wr("ms-orders-pk",all);main();toast(x.payOk?"Payment verified mark ho gayi":"Payment verified ka nishan hata diya")
+  }
+  else if(a==="omore"){olim+=50;const l=$("#olist");if(l)l.innerHTML=olistHTML()}
+  else if(a==="stock"){
+    const PL=rd("ms-products-pk",[]),p=PL.find(x=>x.id===id);if(!p)return;
+    const r=prompt("Stock kitna hai: "+p.name+"\n(0 likhein = Sold out, khali chhorein = unlimited)",typeof p.stock==="number"?p.stock:"");
+    if(r===null)return;const sv=r.trim();
+    if(sv==="")delete p.stock;else{const n=Math.floor(Number(sv));if(!(n>=0)){toast("Sahi number likhein");return}p.stock=n}
+    wr("ms-products-pk",PL);main();toast(p.name+": "+(typeof p.stock==="number"?(p.stock?"stock "+p.stock:"Sold out"):"unlimited"))
+  }
+  else if(a==="forgot"){
+    const em=(($("#em")||{}).value||"").trim(),er=$("#err");
+    if(!em){er.style.color="";er.textContent="Pehle upar apna email likhein, phir dobara dabayein.";return}
+    t.disabled=true;
+    msReset(em).then(()=>{er.style.color="var(--acc)";er.textContent="Agar ye email owner account ka hai to password badalne ka link bhej diya gaya hai. Inbox aur Spam dono dekhein."},x=>{er.style.color="";er.textContent=x&&x.message==="many"?"Bohat zyada koshishein. Thori der baad try karein.":x&&x.message==="setup"?"Setup values admin.html mein missing hain.":"Link nahi bheja ja saka. Internet check karein."}).then(()=>{t.disabled=false})
+  }
+  else if(a==="backup"){
+    t.disabled=true;t.textContent="Backup ban raha hai…";let fresh=true;
+    msPull(true).catch(()=>{fresh=false}).then(()=>{
+      try{const b=new Blob([JSON.stringify(window.msBackup())],{type:"application/json"}),l=document.createElement("a");l.href=URL.createObjectURL(b);l.download="malik-sports-backup-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(l.href),4000);toast(fresh?"Backup file download ho gayi":"Internet nahi tha: backup phone ke aakhri data se bani")}catch(e){toast("Backup nahi ban saka")}
+      t.disabled=false;t.textContent="Backup download karein (sab data)";
+    });
   }
   else if(a==="ocopy"){
     const o=$("#install-sheet");if(o)o.remove();
@@ -431,8 +625,12 @@ document.addEventListener("click",e=>{
   else if(a==="st"){
     const all=rd("ms-orders-pk",[]),x=all.find(o=>o.id===id);if(!x)return;
     if(v==="cancelled"&&!confirm("Cancel order #"+id+"?"))return;
-    x.status=v;wr("ms-orders-pk",all);main();const msg="Order #"+id+" "+ST[v][0].toLowerCase();toast(msg);(window.msMail?msMail(x,v):Promise.resolve("off")).then(r=>toast(msg+(r==="ok"?" · email sent":r==="off"?" · email not set up yet":" · email could not be sent")));
-  }else if(a==="alerts"){alertsOpen=!alertsOpen;audioInit();main()}
+    if((v==="returned"||v==="refunded")&&!confirm("Order #"+id+" ko "+ST[v][0]+" mark karein?"))return;
+    if(v==="confirmed"&&x.pay&&x.pay.method!=="cod"&&!x.payOk&&!confirm("Is order ki payment ("+(PAYN[x.pay.method]||x.pay.method)+") abhi verify nahi hui. Phir bhi confirm karein?"))return;
+    if(v==="dispatched"){courierSheet(x,true);return}
+    setStatus(x,all,v);
+  }
+  else if(a==="alerts"){alertsOpen=!alertsOpen;audioInit();main()}
   else if(a==="alert-enable"){audioInit();const done=()=>{beep();main();toast(("Notification" in window)&&Notification.permission==="granted"?"Alerts ON on this device":"Sound alerts ON (browser notification not allowed)")};("Notification" in window)?Notification.requestPermission().then(done,done):done()}
   else if(a==="alert-test"){ownerAlert("Test alert","Agar ye dikhe ya sunai de to alerts theek hain.");ntResult=null;ntTest().then(r=>{ntResult=r;main();toast(r.ok===true?"Phone alert bhej diya":"Phone alert: masla, neeche dekhein")})}
   else if(a==="csv")csvDownload();
@@ -450,11 +648,11 @@ document.addEventListener("click",e=>{
   }else if(a==="add"){
     const name=$("#pn").value.trim(),price=parseFloat($("#pp").value),cat=$("#pc").value,tag=$("#pt").value.trim();
     if(!name||!(price>0)){$("#perr").textContent="Enter a name and a price above 0.";return}
-    const P=rd("ms-products-pk",[]);
-    P.unshift({id:"p"+Date.now().toString(36),name,cartName:name,cat,type:TYPE[cat],price:Math.round(price),img:photo||undefined,noVoucher:$("#pv").checked?undefined:true,desc:$("#pd").value.trim()||undefined,rating:0,reviews:0,tag:tag||"New",tone:"green",sub:CATN[cat],cartTag:(tag||"New").toUpperCase(),meta:[["Category",CATN[cat]]],keys:name.toLowerCase()});
+    const P=rd("ms-products-pk",[]),sv=($("#ps")||{value:""}).value.trim(),sn=sv===""?NaN:Math.floor(Number(sv)),stock=Number.isFinite(sn)&&sn>=0?sn:undefined;
+    P.unshift({id:"p"+Date.now().toString(36),name,cartName:name,cat,type:TYPE[cat],price:Math.round(price),img:photo||undefined,noVoucher:$("#pv").checked?undefined:true,desc:$("#pd").value.trim()||undefined,stock,rating:0,reviews:0,tag:tag||"New",tone:"green",sub:CATN[cat],cartTag:(tag||"New").toUpperCase(),meta:[["Category",CATN[cat]]],keys:name.toLowerCase()});
     if(!wr("ms-products-pk",P)){toast("Not enough storage. Try a smaller photo or delete a product.");return}photo="";main();toast("Added to the shop");
   }else if(a==="suggest"){
-    const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";for(const b of crypto.getRandomValues(new Uint8Array(4)))s+=A[b%A.length];$("#vc").value="MALIK-"+s;
+    const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";for(const b of crypto.getRandomValues(new Uint8Array(6)))s+=A[b%A.length];$("#vc").value="MALIK-"+s;
   }else if(a==="vadd"){
     const code=$("#vc").value.trim().toUpperCase(),val=Math.round(parseFloat($("#vv").value)),type=$("#vt").value,days=+$("#vd").value,now=Date.now(),V=rd("ms-vouchers-pk",[]);
     const sel=$("#vs").value==="sel",ids=sel?[...document.querySelectorAll(".vp:checked")].map(x=>x.value):[];
@@ -471,16 +669,22 @@ document.addEventListener("click",e=>{
   }
 });
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="pw")$("[data-a=login]").click()});
-document.addEventListener("change",async e=>{if(e.target.id==="vs"){$("#vpl").hidden=e.target.value!=="sel";return}if(e.target.id!=="ph1"&&e.target.id!=="ph2")return;const f=e.target.files[0];if(!f)return;try{photo=await shrink(f);$("#prev").innerHTML=prevHTML()}catch(x){toast("Could not read that photo")}e.target.value=""});
+document.addEventListener("input",e=>{if(e.target.id==="osq"){oq=e.target.value.trim();olim=50;const l=$("#olist");if(l)l.innerHTML=olistHTML()}});
+document.addEventListener("change",async e=>{if(e.target.id==="odt"){odt=e.target.value;olim=50;main();return}if(e.target.id==="vs"){$("#vpl").hidden=e.target.value!=="sel";return}if(e.target.id!=="ph1"&&e.target.id!=="ph2")return;const f=e.target.files[0];if(!f)return;try{photo=await shrink(f);$("#prev").innerHTML=prevHTML()}catch(x){toast("Could not read that photo")}e.target.value=""});
 addEventListener("storage",e=>{
   if(!ok()||e.key!=="ms-orders-pk")return;
   toast("Orders updated");if(tab==="orders")main();else badge();
 });
-const tick=()=>{if(!ok())return;msPull().then(c=>{if(!c)return;checkNewOrders();if(tab==="orders"){main()}else badge()},()=>{})};
-setInterval(tick,15000);
+/* Every 15 s only the orders are checked (light). Products and vouchers are checked again every 5 minutes and when you come back to the app. */
+let tk=0;
+const tick=full=>{if(!ok())return;tk++;msPull(full===true||tk%20===0).then(c=>{if(!c)return;checkNewOrders();const g=window.msChg||{o:true},seeing=tab==="orders"?(g.o||g.p):tab==="report"?g.o:tab==="products"?g.p:g.v;
+  if(!seeing){badge();return}
+  const a=document.activeElement;if(tab==="orders"&&a&&a.id==="osq"){const l=$("#olist");if(l)l.innerHTML=olistHTML();badge();return}
+  main()},()=>{})};
+setInterval(()=>tick(),15000);
 /* Coming back to the app (or the internet returning) refreshes the orders straight away. */
-document.addEventListener("visibilitychange",()=>{if(!document.hidden)tick()});
-addEventListener("online",()=>{if($("[data-a=retry]"))boot();else tick()});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)tick(true)});
+addEventListener("online",()=>{if($("[data-a=retry]"))boot();else tick(true)});
 addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(ok()&&TABS.includes(h)&&h!==tab){tab=h;main()}});
 document.addEventListener("click",audioInit);
 /* ---------- Install this admin panel as an app (https only) ---------- */
