@@ -225,7 +225,7 @@ function msSha256(s){
   window.msPull = function (all) {
     if (!ready) return Promise.reject(new Error("setup"));
     var lite = all === false;
-    return Promise.all([lite ? null : db("GET", "products"), lite ? null : db("GET", "vouchers"), db("GET", "orders")]).then(function (r) {
+    return Promise.all([lite ? null : db("GET", "products"), lite ? null : db("GET", "vouchers"), db("GET", "orders"), lite ? null : db("GET", "site").catch(function () { return false; })]).then(function (r) {
       var chg = { o: false, p: false, v: false };
       if (!lite) {
         var pr = r[0];
@@ -236,6 +236,7 @@ function msSha256(s){
         chg.v = localStorage.getItem("ms-vouchers-pk") !== vs;
         raw.call(localStorage, "ms-vouchers-pk", vs);
         try { vsync(JSON.parse(vs)); } catch (e) {}
+        if (r[3] !== false) { var si = typeof r[3] === "string" ? r[3] : "{}"; if ((localStorage.getItem("ms-site-pk") || "{}") !== si) chg.p = true; raw.call(localStorage, "ms-site-pk", si); }
       }
       var o = r[2] || {}, arr = []; snap = {};
       Object.keys(o).forEach(function (id) { if (gone[id]) return; try { arr.push(JSON.parse(o[id])); snap[id] = o[id]; } catch (e) {} });
@@ -321,6 +322,12 @@ const DEAD=new Set(["cancelled","returned","refunded"]);
 const NEXT={pending:["confirmed","Confirm order"],confirmed:["dispatched","Mark dispatched"],dispatched:["delivered","Mark delivered"]};
 const PAYN={cod:"Cash on Delivery",easypaisa:"Easypaisa",jazzcash:"JazzCash"};
 const CATN={bats:"Bats",balls:"Balls",footballs:"Footballs",footwear:"Footwear",gloves:"Gloves",helmets:"Helmets",accessories:"Accessories"};
+/* A category renamed on the shop page (Edit shop website) shows with its new name here too. The category itself (the code behind it) stays the same. */
+const CL=k=>{const base=CATN[k]||k;let o={};try{o=JSON.parse(localStorage.getItem("ms-site-pk")||"{}")||{}}catch(e){}
+  if(o["cat|"+base])return o["cat|"+base];
+  for(const pre of ["view-shop|","view-home|"])if(o[pre+base])return o[pre+base];
+  for(const key in o)if(key.startsWith("view-")&&key.endsWith("|"+base))return o[key];
+  return base};
 const TYPE={bats:"bat",balls:"ball",footballs:"football",footwear:"shoe",gloves:"gloves",helmets:"helmet",accessories:"duffel"};
 const TABS=["orders","products","vouchers","report"];let tab=TABS.includes(location.hash.slice(1))?location.hash.slice(1):"orders",flt="all",tt;
 const ok=()=>{try{return msStore.getItem("ms-admin-ok")==="1"}catch(e){return false}};
@@ -520,9 +527,9 @@ function alertsHTML(){
 function productsView(){
   const P=rd("ms-products-pk",null);
   if(!Array.isArray(P))return `<div class="card empty"><b>Shop products not loaded yet</b><p class="mute"><a href="https://maliksports.github.io/Malik-Sports/">Open the shop</a> once in this browser, then come back here.</p></div>`;
-  return `<div class="card"><h2>Add a product</h2><div class="grid"><label>Name<input id="pn" maxlength="60" placeholder="e.g. Hard Tennis Ball"></label><label>Category<select id="pc">${Object.entries(CATN).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select></label><label>Price (Rs)<input id="pp" type="number" min="1" step="1" inputmode="numeric"></label><label>Label (optional)<input id="pt" maxlength="14" placeholder="New, Sale"></label><label>Stock (optional)<input id="ps" type="number" min="0" step="1" inputmode="numeric" placeholder="khali = unlimited"></label></div><label style="margin-top:12px">Description (optional)<textarea id="pd" rows="4" maxlength="1500" placeholder="Tell customers about this product: material, size, features, what is in the box…"></textarea></label>
+  return `<div class="card"><h2>Add a product</h2><div class="grid"><label>Name<input id="pn" maxlength="60" placeholder="e.g. Hard Tennis Ball"></label><label>Category<select id="pc">${Object.entries(CATN).map(([k,v])=>`<option value="${k}">${CL(k)}</option>`).join("")}</select></label><label>Price (Rs)<input id="pp" type="number" min="1" step="1" inputmode="numeric"></label><label>Label (optional)<input id="pt" maxlength="14" placeholder="New, Sale"></label><label>Stock (optional)<input id="ps" type="number" min="0" step="1" inputmode="numeric" placeholder="khali = unlimited"></label></div><label style="margin-top:12px">Description (optional)<textarea id="pd" rows="4" maxlength="1500" placeholder="Tell customers about this product: material, size, features, what is in the box…"></textarea></label>
   <label style="display:flex;align-items:center;gap:10px;margin-top:14px;color:var(--fg)"><input id="pv" type="checkbox" checked style="display:inline-block;width:22px;height:22px;margin:0;padding:0;accent-color:#00fe66">Vouchers can be used on this product</label><div style="margin-top:12px"><span class="mute sm">Photo (optional)</span><div class="acts" style="margin-top:6px"><button class="btn" data-a="cam">Take photo</button><button class="btn" data-a="gal">Choose from gallery</button></div><div id="prev" class="acts g">${prevHTML()}</div><input id="ph1" type="file" accept="image/*" capture="environment" hidden><input id="ph2" type="file" accept="image/*" hidden></div><p id="perr" class="err" role="alert"></p><button class="btn pri" data-a="add">Add to shop</button></div>
-  <h2 class="h2">In the shop (${P.length})</h2><p class="mute sm">Customers see changes when they open or reload the shop.</p>`+(P.length?P.map(p=>`<div class="card row g" style="flex-wrap:wrap"><div class="row g">${p.img?`<img class="thumb" src="${p.img}" alt="">`:""}<div><b>${esc(p.name)}</b><div class="mute sm">${esc(CATN[p.cat]||p.cat)} · ${money(p.price)}${typeof p.stock==="number"?(p.stock>0?" · Stock "+p.stock:` · <b style="color:var(--err)">Sold out</b>`):""}</div></div></div><div class="acts" style="margin:0"><button class="btn${typeof p.stock==="number"&&p.stock<=3?" bad":""}" data-a="stock" data-id="${esc(p.id)}">Stock</button><button class="btn${p.noVoucher?"":" pri"}" data-a="vtog" data-id="${esc(p.id)}">Voucher: ${p.noVoucher?"OFF":"ON"}</button><button class="btn" data-a="desc" data-id="${esc(p.id)}">Description${p.desc?" ✓":""}</button><button class="btn" data-a="price" data-id="${esc(p.id)}">Set price</button><button class="btn bad" data-a="del" data-id="${esc(p.id)}">Delete</button></div></div>${editId===p.id?descEditor(p):""}`).join(""):`<div class="card empty">No products in the shop. Add one above.</div>`);
+  <h2 class="h2">In the shop (${P.length})</h2><p class="mute sm">Customers see changes when they open or reload the shop.</p>`+(P.length?P.map(p=>`<div class="card row g" style="flex-wrap:wrap"><div class="row g">${p.img?`<img class="thumb" src="${p.img}" alt="">`:""}<div><b>${esc(p.name)}</b><div class="mute sm">${esc(CL(p.cat))} · ${money(p.price)}${typeof p.stock==="number"?(p.stock>0?" · Stock "+p.stock:` · <b style="color:var(--err)">Sold out</b>`):""}</div></div></div><div class="acts" style="margin:0"><button class="btn${typeof p.stock==="number"&&p.stock<=3?" bad":""}" data-a="stock" data-id="${esc(p.id)}">Stock</button><button class="btn${p.noVoucher?"":" pri"}" data-a="vtog" data-id="${esc(p.id)}">Voucher: ${p.noVoucher?"OFF":"ON"}</button><button class="btn" data-a="desc" data-id="${esc(p.id)}">Description${p.desc?" ✓":""}</button><button class="btn" data-a="price" data-id="${esc(p.id)}">Set price</button><button class="btn bad" data-a="del" data-id="${esc(p.id)}">Delete</button></div></div>${editId===p.id?descEditor(p):""}`).join(""):`<div class="card empty">No products in the shop. Add one above.</div>`);
 }
 
 const left=ms=>{const m=Math.floor(ms/6e4),d=Math.floor(m/1440),h=Math.floor(m%1440/60);return d?`${d}d ${h}h left`:`${h}h ${m%60}m left`};
@@ -833,7 +840,7 @@ function commit(cancel){
   S.set(map);hint();
 }
 function loaded(){
-  try{fw=fr.contentWindow;S=fw.msSite;if(!S)throw 0;S.hold=true;S.set(map);inject(fr.contentDocument)}
+  try{fw=fr.contentWindow;S=fw.msSite;if(!S)throw 0;S.hold=true;S.set(map);if(!dirty()||!cur){const m2=S.edits();if(JSON.stringify(m2)!==JSON.stringify(map)){const wasSaved=!dirty();map=m2;if(wasSaved)saved=JSON.stringify(map)}}inject(fr.contentDocument)}
   catch(e){warn="Shop page edit ke liye load nahi hua. Naya index.html aur naya admin.html dono saath upload karein, phir dobara koshish karein.";hint();return}
   setMode(mode);
 }
@@ -856,6 +863,7 @@ function close(){
   try{fr.src="about:blank"}catch(e){}
   ov.remove();ov=fr=fw=S=null;cur=null;
   document.documentElement.style.overflow="";
+  try{main()}catch(e){}
 }
 function open(){
   if(ov)return;

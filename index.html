@@ -1161,15 +1161,28 @@ function msSha256(s){
   "use strict";
   var DB = String(window.MS_DB || "").replace(/\/+$/, ""), LS = "ms-site-pk";
   var EDITS = {}, ORIG = new WeakMap(), touched = false, timer = 0;
+  var HARD = "script,style,noscript,textarea,input,select,option,svg,.material-symbols-outlined,[data-ms-noedit],[contenteditable],#boot-splash";
   var SKIP = "script,style,noscript,textarea,input,select,option,svg,.material-symbols-outlined,[data-ms-noedit],[contenteditable],#boot-splash,#home-grid,#shop-grid,#cart-lines,#cart-summary,#cart-progress,#order-body,#bag-count,#cart-count";
-  function load(s) { try { var o = JSON.parse(s); return o && typeof o === "object" && !Array.isArray(o) ? o : {}; } catch (e) { return {}; } }
+  /* Category names (Bats, Footwear ...) are renamed everywhere at once: one key "cat|Footwear" for the whole site. */
+  var CATL = ["All Gear", "Bats", "Balls", "Footballs", "Footwear", "Gloves", "Helmets", "Accessories"];
+  function mig(o) {
+    Object.keys(o).forEach(function (k) {
+      var i = k.indexOf("|"); if (i < 0 || k.slice(0, i) === "cat") return;
+      var t = k.slice(i + 1);
+      if (CATL.indexOf(t) > -1) { if (!Object.prototype.hasOwnProperty.call(o, "cat|" + t)) o["cat|" + t] = o[k]; delete o[k]; }
+    });
+    return o;
+  }
+  function load(s) { try { var o = JSON.parse(s); return o && typeof o === "object" && !Array.isArray(o) ? mig(o) : {}; } catch (e) { return {}; } }
   function norm(s) { return String(s).replace(/\s+/g, " ").trim(); }
   function origOf(n) { return ORIG.has(n) ? ORIG.get(n) : n.nodeValue; }
   function scopeOf(n) { var p = n.parentElement, v = p && p.closest ? p.closest('section[id^="view-"]') : null; return v ? v.id : "global"; }
-  function keyOf(n) { return scopeOf(n) + "|" + norm(origOf(n)); }
+  function keyOf(n) { var s = norm(origOf(n)); return CATL.indexOf(s) > -1 ? "cat|" + s : scopeOf(n) + "|" + s; }
   function okNode(n) {
-    var p = n.parentElement; if (!p || (p.closest && p.closest(SKIP))) return false;
+    var p = n.parentElement; if (!p) return false;
     var s = norm(origOf(n)); if (!s) return false;
+    /* a category name stays editable (and renamed) even on product cards; everything else on product cards, cart and orders is shop data */
+    if (p.closest && p.closest(CATL.indexOf(s) > -1 ? HARD : SKIP)) return false;
     try { if (!/\p{L}/u.test(s)) return false; } catch (e) {}
     return !/^rs\.?\s*[\d,.\s]+$/i.test(s);
   }
@@ -1195,7 +1208,7 @@ function msSha256(s){
     hold: false, norm: norm, ok: okNode, key: keyOf, orig: origOf,
     bind: function (n, o) { ORIG.set(n, o); touched = true; },
     edits: function () { return JSON.parse(JSON.stringify(EDITS)); },
-    set: function (m) { EDITS = m && typeof m === "object" ? JSON.parse(JSON.stringify(m)) : {}; touched = true; apply(); },
+    set: function (m) { EDITS = m && typeof m === "object" ? mig(JSON.parse(JSON.stringify(m))) : {}; touched = true; apply(); },
     cache: function () { try { localStorage.setItem(LS, JSON.stringify(EDITS)); } catch (e) {} }
   };
   try { EDITS = load(localStorage.getItem(LS)); } catch (e) {}
