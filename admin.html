@@ -7,8 +7,8 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#131317">
 <link rel="manifest" href="admin.webmanifest" crossorigin="use-credentials">
-<link rel="icon" type="image/png" href="admin-192.png">
-<link rel="apple-touch-icon" href="admin-apple-touch-icon.png">
+<link rel="icon" type="image/png" href="admin-192.png?v=2">
+<link rel="apple-touch-icon" href="admin-apple-touch-icon.png?v=2">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="MS Admin">
@@ -63,27 +63,44 @@ textarea{resize:vertical}
 #toast{z-index:400;position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:var(--acc);color:var(--ink);font-weight:700;padding:12px 20px;border-radius:12px;transition:.25s;pointer-events:none}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* Owner login (new look) */
+.lg-glow{position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 95% 46% at 50% 0%,rgba(0,254,102,.20),rgba(0,254,102,.06) 58%,transparent 80%)}
+.login{max-width:24rem;margin:clamp(24px,15vh,150px) auto 0}
+.lg-head{display:flex;align-items:center;gap:14px;margin:0 4px 18px}
+.lg-logo{flex:none;width:52px;height:52px;border-radius:14px;filter:drop-shadow(0 0 14px rgba(0,254,102,.25))}.lg-logo svg{display:block;width:52px;height:52px}
+.lg-head h1{font-size:27px;line-height:1.05;text-transform:uppercase;letter-spacing:.03em;color:#fff}
+.lg-sub{margin-top:3px;font-size:13px;color:var(--mute)}
+.lg-card{padding:18px;border:1px solid #2c2b31;border-radius:16px;background:linear-gradient(180deg,#222227,#1c1c20);box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.lg-tag{display:inline-block;margin-bottom:14px;padding:4px 9px;border-radius:6px;background:#00391a;color:var(--acc);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.lg-card label{margin:0}
+.lg-card input{margin-top:6px;padding:13px 14px;border-radius:10px;background:#0e0e12;border:1px solid #3a393e;transition:border-color .15s,box-shadow .15s}
+.lg-card input:focus,.lg-card input:focus-visible{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,254,102,.16),0 0 16px rgba(0,254,102,.28)}
+.pwrow{position:relative}.pwrow input{padding-right:72px}
+.pwtog{position:absolute;right:6px;top:50%;transform:translateY(-50%);margin-top:3px;background:none;color:var(--acc);font-size:12px;font-weight:700;letter-spacing:.08em;padding:10px 10px;border-radius:8px}
+.lg-card .err{margin:10px 0 0;min-height:0}.lg-card .err:empty{margin:0}
+.lg-card .go{width:100%;margin-top:16px;padding:15px 18px;font-size:16px;font-weight:800;border-radius:12px;box-shadow:0 0 24px rgba(0,254,102,.38)}
+.lg-card .go:disabled{opacity:.65;box-shadow:none}
+.lg-card .fg{display:block;margin:10px auto 0;padding:8px 12px;background:none;color:var(--mute);font-size:14px;border-radius:8px}
+.lg-card .fg:disabled{opacity:.6}
+.lg-foot{margin:18px 0 0;text-align:center;font-size:12px;color:#7d7b82;letter-spacing:.02em}
+
 /* App mode + install sheet */
 #boot-splash{display:none}
-.is-app #boot-splash{display:flex;position:fixed;inset:0;z-index:300;background:#131317;align-items:center;justify-content:center;flex-direction:column;gap:18px;transition:opacity .3s}
+.is-app #boot-splash{display:flex;position:fixed;inset:0;z-index:300;background:radial-gradient(ellipse 90% 50% at 50% 38%,rgba(0,254,102,.20),rgba(0,254,102,.05) 55%,transparent 78%),#0c0c0f;align-items:center;justify-content:center;flex-direction:column;gap:18px;transition:opacity .3s}
 .is-app #boot-splash.out{opacity:0;pointer-events:none}
-#boot-splash .bs-name{font-family:Anton,Impact,sans-serif;font-size:28px;letter-spacing:.06em;text-transform:uppercase;color:#e4e1e7}
+#boot-splash svg{border-radius:24px;filter:drop-shadow(0 0 26px rgba(0,254,102,.32));animation:bs-pop .5s ease-out both}
+#boot-splash .bs-name{font-family:Anton,Impact,"Arial Narrow Bold",sans-serif;font-size:28px;letter-spacing:.06em;text-transform:uppercase;color:#fff}
 #boot-splash .bs-bar{width:56px;height:4px;border-radius:4px;background:#2a292e;overflow:hidden}
 #boot-splash .bs-bar::after{content:"";display:block;width:40%;height:100%;background:#00fe66;border-radius:4px;animation:bs-run 1s ease-in-out infinite}
 @keyframes bs-run{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+@keyframes bs-pop{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
 html.is-app{overscroll-behavior:none}
+.is-app button,.is-app a,.is-app input,.is-app select,.is-app textarea{touch-action:manipulation}
+.is-app .btn:active,.is-app .tab:active,.is-app .chip:active{transform:scale(.97)}
 .is-app a,.is-app button,.is-app img{-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 #install-sheet{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
 #install-sheet .box{width:100%;max-width:28rem;background:var(--panel);border-radius:16px 16px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
 @media(min-width:700px){#install-sheet{align-items:center}#install-sheet .box{border-radius:16px}}
-/* Site editor (full-screen shop page where text can be changed) */
-#se{position:fixed;inset:0;z-index:350;background:var(--bg);display:flex;flex-direction:column}
-.se-bar{padding:env(safe-area-inset-top) max(10px,env(safe-area-inset-right)) 8px max(10px,env(safe-area-inset-left));background:#0e0e12;border-bottom:1px solid var(--line)}
-.se-row{display:flex;gap:8px;align-items:center;padding-top:8px}.se-row .btn{padding:9px 12px;white-space:nowrap}
-.se-seg{flex:1;display:flex;background:var(--panel);border-radius:10px;padding:3px;gap:3px}.se-seg button{flex:1;padding:8px 4px;border-radius:8px;background:none;font-weight:700;font-size:14px}.se-seg button.on{background:var(--acc);color:var(--ink)}
-.se-chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}.se-chips button{background:var(--panel);padding:7px 12px;border-radius:99px;white-space:nowrap;font-size:13px;font-weight:600}
-.se-hint{font-size:12px;color:var(--mute);padding-top:4px;line-height:1.4}.se-hint b{color:var(--acc)}.se-hint.w{color:var(--err)}
-#se iframe{flex:1;width:100%;border:0;background:#fff;min-height:0}
 </style>
 <script>
 /* ============ EMAIL SETUP: paste your 3 EmailJS values between the quotes ============ */
@@ -134,7 +151,7 @@ window.MS_HTTPS_URL = "https://maliksports.github.io/Malik-Sports/";   // the ht
 window.MS_ADMIN_URL = "https://maliksports.github.io/Malik-Sports/admin.html";   // admin app yahin se install hoti hai. Shop aur admin ek hi address par hon to Chrome dono ko ek hi app maanta hai ("already installed"), isliye admin ka address shop se ALAG rakhein. Khali ("") karein to isi address se install hogi.
 window.MS_FORCE_HTTPS = false;   // true = http par aane wale visitor apne aap https par chale jayenge. Pehle browser mein https:// wala address khol kar dekh lein ke wo khulta hai, phir true karein.
 try { if (window.MS_FORCE_HTTPS && location.protocol === "http:" && !/^(localhost|127\.|\[::1\])/.test(location.hostname)) location.replace("https://" + location.host + location.pathname + location.search + location.hash); } catch (e) {}
-window.MS_VERSION = "2026-11-27";   // sirf nishan: upload ke baad admin ke neeche likha nazar aata hai, taake pata chale nayi file lagi ya purani
+window.MS_VERSION = "2026-11-28";   // sirf nishan: upload ke baad admin ke neeche likha nazar aata hai, taake pata chale nayi file lagi ya purani
 /* ============ SHARED DATABASE: paste your 2 Firebase values between the quotes ============ */
 window.MS_DB = "https://malik-sports-default-rtdb.firebaseio.com";   // e.g. https://malik-sports-default-rtdb.firebaseio.com
 window.MS_KEY = "AIzaSyCKHqm-_cjIxPJp403wB-1A8g5nF43P_GY";   // e.g. AIzaSy...
@@ -225,7 +242,7 @@ function msSha256(s){
   window.msPull = function (all) {
     if (!ready) return Promise.reject(new Error("setup"));
     var lite = all === false;
-    return Promise.all([lite ? null : db("GET", "products"), lite ? null : db("GET", "vouchers"), db("GET", "orders"), lite ? null : db("GET", "site").catch(function () { return false; })]).then(function (r) {
+    return Promise.all([lite ? null : db("GET", "products"), lite ? null : db("GET", "vouchers"), db("GET", "orders")]).then(function (r) {
       var chg = { o: false, p: false, v: false };
       if (!lite) {
         var pr = r[0];
@@ -236,7 +253,6 @@ function msSha256(s){
         chg.v = localStorage.getItem("ms-vouchers-pk") !== vs;
         raw.call(localStorage, "ms-vouchers-pk", vs);
         try { vsync(JSON.parse(vs)); } catch (e) {}
-        if (r[3] !== false) { var si = typeof r[3] === "string" ? r[3] : "{}"; if ((localStorage.getItem("ms-site-pk") || "{}") !== si) chg.p = true; raw.call(localStorage, "ms-site-pk", si); }
       }
       var o = r[2] || {}, arr = []; snap = {};
       Object.keys(o).forEach(function (id) { if (gone[id]) return; try { arr.push(JSON.parse(o[id])); snap[id] = o[id]; } catch (e) {} });
@@ -302,7 +318,7 @@ function msSha256(s){
 </script>
 </head>
 <body>
-<div id="boot-splash" aria-hidden="true"><svg width="88" height="88" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1f1f23"/><path d="M8 20V8.5l8 7.5 8-7.5V20" fill="none" stroke="#00fe66" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><rect x="11" y="24" width="10" height="1.6" rx=".8" fill="#ffffff" opacity=".85"/></svg><div class="bs-name">Malik Controller</div><div class="bs-bar"></div></div>
+<div id="boot-splash" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="96" height="96"><defs><radialGradient id="spg" cx="256" cy="240" r="270" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00fe66" stop-opacity=".26"/><stop offset=".55" stop-color="#00fe66" stop-opacity=".08"/><stop offset="1" stop-color="#00fe66" stop-opacity="0"/></radialGradient><filter id="spb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="9"/></filter></defs><rect width="512" height="512" rx="116" fill="#111115"/><rect width="512" height="512" rx="116" fill="url(#spg)"/><g transform="translate(0.00 10.00) scale(1.0)"><path d="M146 322V112L256 244L366 112V322" fill="none" stroke="#00fe66" stroke-opacity=".5" stroke-width="46" stroke-linecap="round" stroke-linejoin="round" filter="url(#spb)"/><path d="M146 322V112L256 244L366 112V322" fill="none" stroke="#00fe66" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/><rect x="209.0" y="402" width="22" height="22" rx="11.0" fill="#e9ecea"/><rect x="245.0" y="382" width="22" height="42" rx="11.0" fill="#e9ecea"/><rect x="281.0" y="358" width="22" height="66" rx="11.0" fill="#00fe66"/></g></svg><div class="bs-name">Malik Sports Admin</div><div class="bs-bar"></div></div></div>
 <script>setTimeout(function(){var s=document.getElementById("boot-splash");if(s)s.remove();},8000);</script>
 <div class="wrap" id="app"></div>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -322,12 +338,6 @@ const DEAD=new Set(["cancelled","returned","refunded"]);
 const NEXT={pending:["confirmed","Confirm order"],confirmed:["dispatched","Mark dispatched"],dispatched:["delivered","Mark delivered"]};
 const PAYN={cod:"Cash on Delivery",easypaisa:"Easypaisa",jazzcash:"JazzCash"};
 const CATN={bats:"Bats",balls:"Balls",footballs:"Footballs",footwear:"Footwear",gloves:"Gloves",helmets:"Helmets",accessories:"Accessories"};
-/* A category renamed on the shop page (Edit shop website) shows with its new name here too. The category itself (the code behind it) stays the same. */
-const CL=k=>{const base=CATN[k]||k;let o={};try{o=JSON.parse(localStorage.getItem("ms-site-pk")||"{}")||{}}catch(e){}
-  if(o["cat|"+base])return o["cat|"+base];
-  for(const pre of ["view-shop|","view-home|"])if(o[pre+base])return o[pre+base];
-  for(const key in o)if(key.startsWith("view-")&&key.endsWith("|"+base))return o[key];
-  return base};
 const TYPE={bats:"bat",balls:"ball",footballs:"football",footwear:"shoe",gloves:"gloves",helmets:"helmet",accessories:"duffel"};
 const TABS=["orders","products","vouchers","report"];let tab=TABS.includes(location.hash.slice(1))?location.hash.slice(1):"orders",flt="all",tt;
 const ok=()=>{try{return msStore.getItem("ms-admin-ok")==="1"}catch(e){return false}};
@@ -337,7 +347,7 @@ const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("on");clearT
 function lock(){
   try{navigator.clearAppBadge&&navigator.clearAppBadge()}catch(e){}
   splashOff();
-  $("#app").innerHTML=`<div class="card gate"><h1>Owner desk</h1><p class="mute">Sign in with your owner email and password to manage orders and products.</p><label>Email<input id="em" type="email" autocomplete="username"></label><label style="margin-top:12px">Password<input id="pw" type="password" autocomplete="current-password"></label><p id="err" class="err" role="alert"></p><button class="btn pri" data-a="login">Unlock</button><button class="btn" data-a="forgot" style="margin-top:8px">Password bhool gaye?</button></div>`;
+  $("#app").innerHTML=`<div class="lg-glow" aria-hidden="true"></div><div class="login"><div class="lg-head"><span class="lg-logo" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="52" height="52"><defs><radialGradient id="lgg" cx="256" cy="240" r="270" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00fe66" stop-opacity=".26"/><stop offset=".55" stop-color="#00fe66" stop-opacity=".08"/><stop offset="1" stop-color="#00fe66" stop-opacity="0"/></radialGradient><filter id="lgb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="9"/></filter></defs><rect width="512" height="512" rx="116" fill="#111115"/><rect width="512" height="512" rx="116" fill="url(#lgg)"/><g transform="translate(0.00 10.00) scale(1.0)"><path d="M146 322V112L256 244L366 112V322" fill="none" stroke="#00fe66" stroke-opacity=".5" stroke-width="46" stroke-linecap="round" stroke-linejoin="round" filter="url(#lgb)"/><path d="M146 322V112L256 244L366 112V322" fill="none" stroke="#00fe66" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/><rect x="209.0" y="402" width="22" height="22" rx="11.0" fill="#e9ecea"/><rect x="245.0" y="382" width="22" height="42" rx="11.0" fill="#e9ecea"/><rect x="281.0" y="358" width="22" height="66" rx="11.0" fill="#00fe66"/></g></svg></span><div><h1>Owner desk</h1><div class="lg-sub">Malik Sports · Admin</div></div></div><div class="card lg-card"><span class="lg-tag">Secure login</span><label for="em">Email</label><input id="em" type="email" autocomplete="username" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="owner@email.com"><label for="pw" style="margin-top:14px">Password</label><div class="pwrow"><input id="pw" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false"><button type="button" class="pwtog" data-a="pwtoggle" aria-controls="pw" aria-pressed="false" aria-label="Password dikhayein">SHOW</button></div><p id="err" class="err" role="alert"></p><button class="btn pri go" data-a="login">Unlock</button><button type="button" class="fg" data-a="forgot">Password bhool gaye?</button></div><p class="lg-foot">Sirf owner ke liye · version ${esc(String(window.MS_VERSION||""))}</p></div>`;
 }
 function boot(){
   $("#app").innerHTML=`<div class="card gate"><p class="mute">Loading your shop data…</p></div>`;
@@ -355,7 +365,6 @@ function badge(){
 }
 function main(){
   $("#app").innerHTML=`<div class="top"><h1>Malik Sports · Owner</h1><div class="row g"><a href="https://maliksports.github.io/Malik-Sports/">View shop</a><button class="btn" data-a="lock">Lock</button></div></div>
-  <button class="btn pri" data-a="site" style="width:100%;margin-bottom:12px">✏️ Edit shop website (text badlein)</button>
   ${alertsHTML()}
   <div class="tabs"><button class="tab${tab==="orders"?" on":""}" data-a="tab" data-v="orders">Orders<span id="nb"></span></button><button class="tab${tab==="products"?" on":""}" data-a="tab" data-v="products">Products</button><button class="tab${tab==="vouchers"?" on":""}" data-a="tab" data-v="vouchers">Vouchers</button><button class="tab${tab==="report"?" on":""}" data-a="tab" data-v="report">Report</button></div>`+(tab==="orders"?ordersView():tab==="vouchers"?vouchersView():tab==="report"?reportView():productsView())+`<p class="mute sm" style="text-align:center;margin:28px 0 0">Malik Controller · version ${esc(window.MS_VERSION||"")}</p>`;
   badge();
@@ -527,9 +536,9 @@ function alertsHTML(){
 function productsView(){
   const P=rd("ms-products-pk",null);
   if(!Array.isArray(P))return `<div class="card empty"><b>Shop products not loaded yet</b><p class="mute"><a href="https://maliksports.github.io/Malik-Sports/">Open the shop</a> once in this browser, then come back here.</p></div>`;
-  return `<div class="card"><h2>Add a product</h2><div class="grid"><label>Name<input id="pn" maxlength="60" placeholder="e.g. Hard Tennis Ball"></label><label>Category<select id="pc">${Object.entries(CATN).map(([k,v])=>`<option value="${k}">${CL(k)}</option>`).join("")}</select></label><label>Price (Rs)<input id="pp" type="number" min="1" step="1" inputmode="numeric"></label><label>Label (optional)<input id="pt" maxlength="14" placeholder="New, Sale"></label><label>Stock (optional)<input id="ps" type="number" min="0" step="1" inputmode="numeric" placeholder="khali = unlimited"></label></div><label style="margin-top:12px">Description (optional)<textarea id="pd" rows="4" maxlength="1500" placeholder="Tell customers about this product: material, size, features, what is in the box…"></textarea></label>
+  return `<div class="card"><h2>Add a product</h2><div class="grid"><label>Name<input id="pn" maxlength="60" placeholder="e.g. Hard Tennis Ball"></label><label>Category<select id="pc">${Object.entries(CATN).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select></label><label>Price (Rs)<input id="pp" type="number" min="1" step="1" inputmode="numeric"></label><label>Label (optional)<input id="pt" maxlength="14" placeholder="New, Sale"></label><label>Stock (optional)<input id="ps" type="number" min="0" step="1" inputmode="numeric" placeholder="khali = unlimited"></label></div><label style="margin-top:12px">Description (optional)<textarea id="pd" rows="4" maxlength="1500" placeholder="Tell customers about this product: material, size, features, what is in the box…"></textarea></label>
   <label style="display:flex;align-items:center;gap:10px;margin-top:14px;color:var(--fg)"><input id="pv" type="checkbox" checked style="display:inline-block;width:22px;height:22px;margin:0;padding:0;accent-color:#00fe66">Vouchers can be used on this product</label><div style="margin-top:12px"><span class="mute sm">Photo (optional)</span><div class="acts" style="margin-top:6px"><button class="btn" data-a="cam">Take photo</button><button class="btn" data-a="gal">Choose from gallery</button></div><div id="prev" class="acts g">${prevHTML()}</div><input id="ph1" type="file" accept="image/*" capture="environment" hidden><input id="ph2" type="file" accept="image/*" hidden></div><p id="perr" class="err" role="alert"></p><button class="btn pri" data-a="add">Add to shop</button></div>
-  <h2 class="h2">In the shop (${P.length})</h2><p class="mute sm">Customers see changes when they open or reload the shop.</p>`+(P.length?P.map(p=>`<div class="card row g" style="flex-wrap:wrap"><div class="row g">${p.img?`<img class="thumb" src="${p.img}" alt="">`:""}<div><b>${esc(p.name)}</b><div class="mute sm">${esc(CL(p.cat))} · ${money(p.price)}${typeof p.stock==="number"?(p.stock>0?" · Stock "+p.stock:` · <b style="color:var(--err)">Sold out</b>`):""}</div></div></div><div class="acts" style="margin:0"><button class="btn${typeof p.stock==="number"&&p.stock<=3?" bad":""}" data-a="stock" data-id="${esc(p.id)}">Stock</button><button class="btn${p.noVoucher?"":" pri"}" data-a="vtog" data-id="${esc(p.id)}">Voucher: ${p.noVoucher?"OFF":"ON"}</button><button class="btn" data-a="desc" data-id="${esc(p.id)}">Description${p.desc?" ✓":""}</button><button class="btn" data-a="price" data-id="${esc(p.id)}">Set price</button><button class="btn bad" data-a="del" data-id="${esc(p.id)}">Delete</button></div></div>${editId===p.id?descEditor(p):""}`).join(""):`<div class="card empty">No products in the shop. Add one above.</div>`);
+  <h2 class="h2">In the shop (${P.length})</h2><p class="mute sm">Customers see changes when they open or reload the shop.</p>`+(P.length?P.map(p=>`<div class="card row g" style="flex-wrap:wrap"><div class="row g">${p.img?`<img class="thumb" src="${p.img}" alt="">`:""}<div><b>${esc(p.name)}</b><div class="mute sm">${esc(CATN[p.cat]||p.cat)} · ${money(p.price)}${typeof p.stock==="number"?(p.stock>0?" · Stock "+p.stock:` · <b style="color:var(--err)">Sold out</b>`):""}</div></div></div><div class="acts" style="margin:0"><button class="btn${typeof p.stock==="number"&&p.stock<=3?" bad":""}" data-a="stock" data-id="${esc(p.id)}">Stock</button><button class="btn${p.noVoucher?"":" pri"}" data-a="vtog" data-id="${esc(p.id)}">Voucher: ${p.noVoucher?"OFF":"ON"}</button><button class="btn" data-a="desc" data-id="${esc(p.id)}">Description${p.desc?" ✓":""}</button><button class="btn" data-a="price" data-id="${esc(p.id)}">Set price</button><button class="btn bad" data-a="del" data-id="${esc(p.id)}">Delete</button></div></div>${editId===p.id?descEditor(p):""}`).join(""):`<div class="card empty">No products in the shop. Add one above.</div>`);
 }
 
 const left=ms=>{const m=Math.floor(ms/6e4),d=Math.floor(m/1440),h=Math.floor(m%1440/60);return d?`${d}d ${h}h left`:`${h}h ${m%60}m left`};
@@ -556,6 +565,10 @@ document.addEventListener("click",e=>{
     t.disabled=true;t.textContent="Signing in…";
     msLogin(em,pw).then(()=>{msStore.setItem("ms-admin-ok","1");boot()},x=>{$("#err").textContent=x&&x.message==="setup"?"Setup values are missing at the top of admin.html.":"Wrong email or password. Try again.";t.disabled=false;t.textContent="Unlock"});
   }else if(a==="lock"){[sessionStorage,localStorage].forEach(x=>{try{x.removeItem("ms-admin-ok");x.removeItem("ms-fb")}catch(e){}});lock()}
+  else if(a==="pwtoggle"){
+    const p=$("#pw");if(!p)return;const show=p.type==="password";p.type=show?"text":"password";
+    t.textContent=show?"HIDE":"SHOW";t.setAttribute("aria-pressed",show?"true":"false");t.setAttribute("aria-label",show?"Password chhupayein":"Password dikhayein");p.focus()
+  }
   else if(a==="retry")boot()
   else if(a==="install")doInstall()
   else if(a==="sheet-close"){const o=$("#install-sheet");if(o)o.remove()}
@@ -684,7 +697,7 @@ document.addEventListener("click",e=>{
     if(p&&confirm("Delete “"+p.name+"” from the shop?")){wr("ms-products-pk",P.filter(x=>x.id!==id));main();toast("Deleted from the shop")}
   }
 });
-document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="pw")$("[data-a=login]").click()});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="pw")$("[data-a=login]").click();else if(e.key==="Enter"&&e.target.id==="em"){e.preventDefault();const p=$("#pw");if(p)p.focus()}});
 document.addEventListener("input",e=>{if(e.target.id==="osq"){oq=e.target.value.trim();olim=50;const l=$("#olist");if(l)l.innerHTML=olistHTML()}});
 document.addEventListener("change",async e=>{if(e.target.id==="odt"){odt=e.target.value;olim=50;main();return}if(e.target.id==="vs"){$("#vpl").hidden=e.target.value!=="sel";return}if(e.target.id!=="ph1"&&e.target.id!=="ph2")return;const f=e.target.files[0];if(!f)return;try{photo=await shrink(f);$("#prev").innerHTML=prevHTML()}catch(x){toast("Could not read that photo")}e.target.value=""});
 addEventListener("storage",e=>{
@@ -741,157 +754,6 @@ function doInstall(){
   else sheet(`<p style="margin:0 0 8px">Chrome ke <b>&#8942; menu</b> (upar daayen) mein <b>Install app</b> ya <b>Add to Home screen</b> dabayein.</p><p class="mute" style="margin:0">Agar ye option nahi dikhta: page refresh kar ke 10 second ruken, aur Chrome update karein. Agar app pehle se install hai to use home screen se kholein.</p>`);
 }
 if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))navigator.serviceWorker.register("sw.js").catch(()=>{});
-/* ---------- SITE EDITOR: open the real shop page, tap any text, change it in the same font, press Save ---------- */
-(function(){
-let ov=null,fr=null,fw=null,S=null,map={},saved="{}",mode="edit",cur=null,warn="";
-const PAGES=[["home","Home"],["shop","Shop"],["cart","Cart"],["track","Track"],["support","Help"]];
-const PT=(()=>{try{const d=document.createElement("div");d.contentEditable="plaintext-only";return d.contentEditable==="plaintext-only"}catch(e){return false}})();
-const parse=s=>{try{const o=JSON.parse(s);return o&&typeof o==="object"&&!Array.isArray(o)?o:{}}catch(e){return {}}};
-const dirty=()=>JSON.stringify(map)!==saved;
-function hint(){
-  if(!ov)return;
-  const n=Object.keys(map).length,h=ov.querySelector("#se-hint"),b=ov.querySelector("#se-save");
-  b.textContent=dirty()?"Save ●":"Save";
-  h.className="se-hint"+(warn?" w":"");
-  h.innerHTML=warn||(mode==="edit"?"<b>Edit chalu:</b> kisi bhi text ko dabayein aur likhein. Enter ya bahar dabane se tay ho jata hai. Phir upar <b>Save</b>. "+(n?"Badle hue text: "+n+".":""):"<b>Browse chalu:</b> page normal chal raha hai (product kholein, page badlein). Text badalne ke liye wapas <b>Edit</b> dabayein.");
-}
-function setMode(m){
-  commit();mode=m;
-  if(!ov)return;
-  ov.querySelectorAll(".se-seg button").forEach(b=>b.classList.toggle("on",b.dataset.se==="m-"+m));
-  try{fw.document.documentElement.classList.toggle("se-edit",m==="edit")}catch(e){}
-  hint();
-}
-function inject(doc){
-  if(doc.getElementById("se-css"))return;
-  const st=doc.createElement("style");st.id="se-css";
-  st.textContent=".ms-ed{outline:2px solid #00c853!important;outline-offset:3px;background:rgba(0,254,102,.18);border-radius:3px;min-width:12px;cursor:text;-webkit-user-select:text;user-select:text}html.se-edit a,html.se-edit button,html.se-edit [data-act]{cursor:text}#boot-splash{display:none!important}";
-  doc.head.appendChild(st);
-  doc.addEventListener("click",onClick,true);
-  ["keydown","keyup","keypress"].forEach(t=>doc.addEventListener(t,onKey,true));
-  doc.addEventListener("paste",onPaste,true);
-  doc.addEventListener("submit",e=>{if(mode==="edit")e.preventDefault()},true);
-}
-const okN=n=>{try{return S.ok(n)}catch(e){return false}};
-function nodeAt(doc,x,y,t){
-  let r=null;
-  try{if(doc.caretRangeFromPoint)r=doc.caretRangeFromPoint(x,y);else if(doc.caretPositionFromPoint){const p=doc.caretPositionFromPoint(x,y);if(p){r=doc.createRange();r.setStart(p.offsetNode,p.offset)}}}catch(e){}
-  const near=n=>{const g=doc.createRange();g.selectNodeContents(n);let best=1e9;for(const q of g.getClientRects()){const dx=x<q.left?q.left-x:x>q.right?x-q.right:0,dy=y<q.top?q.top-y:y>q.bottom?y-q.bottom:0;best=Math.min(best,Math.hypot(dx,dy))}return best};
-  if(r&&r.startContainer.nodeType===3&&okN(r.startContainer)&&near(r.startContainer)<=12)return{n:r.startContainer,off:r.startOffset};
-  let el=t;
-  for(let up=0;el&&up<4;up++,el=el.parentElement){
-    const w=doc.createTreeWalker(el,4,null);let n,best=null,bd=1e9;
-    while((n=w.nextNode())){if(!okN(n))continue;const d=near(n);if(d<bd){bd=d;best=n}}
-    if(best&&bd<=60)return{n:best,off:1e6};
-  }
-  return null;
-}
-function onClick(e){
-  if(mode!=="edit")return;
-  const t=e.target;
-  if(t.closest&&t.closest("input,select,textarea"))return;
-  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
-  if(t.closest&&t.closest(".ms-ed"))return;
-  commit();
-  const hit=nodeAt(fw.document,e.clientX,e.clientY,t);
-  if(hit)start(hit.n,hit.off);else toast("Yahan koi text nahi mila. Kisi likhe hue lafz par dabayein.");
-}
-function onKey(e){
-  const t=e.target;if(!t||!t.closest||!t.closest(".ms-ed"))return;
-  e.stopPropagation();
-  if(e.type==="keydown"){
-    if(e.key==="Enter"){e.preventDefault();t.blur()}
-    else if(e.key==="Escape"){e.preventDefault();commit(true)}
-  }
-}
-function onPaste(e){
-  const t=e.target;if(!t||!t.closest||!t.closest(".ms-ed"))return;
-  e.preventDefault();
-  const txt=((e.clipboardData||window.clipboardData).getData("text")||"").replace(/\s+/g," ");
-  try{fw.document.execCommand("insertText",false,txt)}catch(x){}
-}
-function start(n,off){
-  const doc=n.ownerDocument,key=S.key(n),orig=S.orig(n),v=n.nodeValue,m=/^(\s*)([\s\S]*?)(\s*)$/.exec(v);
-  S.bind(n,orig);n.__msEditing=true;
-  const sp=doc.createElement("span");
-  sp.className="ms-ed";sp.setAttribute("contenteditable",PT?"plaintext-only":"true");sp.spellcheck=false;
-  sp.textContent=m[2].replace(/\s+/g," ");
-  const tail=doc.createTextNode(m[3]);
-  n.parentNode.insertBefore(sp,n.nextSibling);sp.parentNode.insertBefore(tail,sp.nextSibling);
-  n.nodeValue=m[1];
-  cur={n,sp,tail,key,orig,m,before:sp.textContent};
-  sp.addEventListener("blur",()=>setTimeout(()=>{if(cur&&cur.sp===sp)commit()},0));
-  try{
-    sp.focus({preventScroll:true});
-    const sel=doc.defaultView.getSelection(),r=doc.createRange(),tn=sp.firstChild;
-    if(tn){r.setStart(tn,Math.max(0,Math.min(tn.length,off-m[1].length)));r.collapse(true);sel.removeAllRanges();sel.addRange(r)}
-  }catch(e){}
-}
-function commit(cancel){
-  if(!cur)return;
-  const c=cur;cur=null;
-  const txt=cancel?c.before:c.sp.textContent.replace(/\s+/g," ").trim();
-  c.sp.remove();c.tail.remove();c.n.__msEditing=false;
-  c.n.nodeValue=c.m[1]+c.before+c.m[3];
-  const base=S.norm(c.orig);
-  if(txt!==c.before){
-    if(!txt||txt===base)delete map[c.key];else map[c.key]=txt.slice(0,600);
-  }
-  S.set(map);hint();
-}
-function loaded(){
-  try{fw=fr.contentWindow;S=fw.msSite;if(!S)throw 0;S.hold=true;S.set(map);if(!dirty()||!cur){const m2=S.edits();if(JSON.stringify(m2)!==JSON.stringify(map)){const wasSaved=!dirty();map=m2;if(wasSaved)saved=JSON.stringify(map)}}inject(fr.contentDocument)}
-  catch(e){warn="Shop page edit ke liye load nahi hua. Naya index.html aur naya admin.html dono saath upload karein, phir dobara koshish karein.";hint();return}
-  setMode(mode);
-}
-function save(){
-  commit();
-  const body=JSON.stringify(map),b=ov.querySelector("#se-save");b.disabled=true;
-  msDb("PUT","site",body).then(()=>{
-    saved=body;S&&S.cache();warn="";hint();toast("Save ho gaya. Shop par ab live hai.");
-  },x=>{
-    const m=x&&x.message;
-    alert(m==="401"?"Save nahi hua: Firebase rules mein \"site\" wala hissa nahi hai.\n\nNaya firebase-rules.txt ka poora text Firebase Console > Realtime Database > Rules mein paste karke Publish karein, phir yahan dobara Save dabayein. Aapke badlav abhi screen par mehfooz hain."
-      :m==="login"?"Aap ka login khatam ho gaya. Lock dabayein aur dobara sign in karein. (Badlav ke liye pehle Save dobara dabana hoga.)"
-      :"Save nahi hua. Internet check karein aur dobara Save dabayein. Aapke badlav abhi screen par mehfooz hain.");
-  }).then(()=>{b.disabled=false});
-}
-function close(){
-  commit();
-  if(dirty()&&!confirm("Badlav Save nahi hue. Phir bhi band karein?"))return;
-  if(S)S.hold=false;
-  try{fr.src="about:blank"}catch(e){}
-  ov.remove();ov=fr=fw=S=null;cur=null;
-  document.documentElement.style.overflow="";
-  try{main()}catch(e){}
-}
-function open(){
-  if(ov)return;
-  warn="";mode="edit";
-  ov=document.createElement("div");ov.id="se";
-  ov.innerHTML=`<div class="se-bar"><div class="se-row"><button class="btn" data-se="close">✕ Band</button><div class="se-seg"><button data-se="m-edit" class="on">✏️ Edit</button><button data-se="m-browse">👆 Browse</button></div><button class="btn pri" data-se="save" id="se-save">Save</button></div><div class="se-chips">${PAGES.map(p=>`<button data-se="pg" data-p="${p[0]}">${p[1]}</button>`).join("")}<button data-se="menu">⋮ Menu</button><button data-se="reset">↺ Sab original</button></div><div class="se-hint" id="se-hint">Shop page khul raha hai…</div></div><iframe id="se-fr" title="Shop website" src="about:blank"></iframe>`;
-  document.body.appendChild(ov);document.documentElement.style.overflow="hidden";
-  fr=ov.querySelector("#se-fr");fr.addEventListener("load",()=>{if(fr.src!=="about:blank"&&fr.getAttribute("src")!=="about:blank")loaded()});
-  ov.addEventListener("click",e=>{
-    const b=e.target.closest&&e.target.closest("[data-se]");if(!b)return;
-    const a=b.dataset.se;
-    if(a==="close")close();
-    else if(a==="save")save();
-    else if(a==="m-edit")setMode("edit");
-    else if(a==="m-browse")setMode("browse");
-    else if(a==="pg"){commit();try{fw.location.hash=b.dataset.p}catch(x){}}
-    else if(a==="menu"){commit();try{const m=fw.document.getElementById("more-menu");if(m)m.hidden=!m.hidden}catch(x){}}
-    else if(a==="reset"){if(confirm("Sare badle hue text original par wapas karein? (Save dabane tak shop par asar nahi hoga.)")){commit();map={};if(S)S.set(map);hint()}}
-  });
-  msDb("GET","site").then(s=>{saved=typeof s==="string"?s:"{}";map=parse(saved);saved=JSON.stringify(map)},x=>{
-    let c="";try{c=localStorage.getItem("ms-site-pk")||""}catch(e){}
-    map=parse(c);saved=JSON.stringify(map);
-    if(x&&x.message==="401")warn="Dhyan: Firebase rules mein abhi \"site\" nahi hai. Edit kar sakte hain, lekin Save se pehle naya firebase-rules.txt publish karna hoga.";
-  }).then(()=>{if(ov){fr.src="index.html?edit="+Date.now()+"#home"}});
-}
-document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-a=site]");if(b)open()});
-})();
-
 ok()?boot():lock();
 </script>
 </body>
